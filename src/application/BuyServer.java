@@ -1,59 +1,69 @@
 package application;
 
 import java.io.IOException;
-import java.net.*;
 
-import network.HTTPHandler;
 import network.Message;
 import network.NetworkAccess;
-import network.TCPHandler;
 import network.UDPHandler;
 
 
-public class BuyServer {
+public class BuyServer implements Server{
 	
 	
 	public NetworkAccess socket;
 	
 	
-	public void save() { //Save on database
-		
-	}
-	
-	public BuyServer(NetworkAccess serverSocket) throws IOException {
-		this.setServerSocket(serverSocket);
-		System.out.println("BuyServer succesfully started on port " + this.socket.getPort() + ".");
+	public void registerLoadBalancer(){
 
-		while(true) {
-				
-			Message packetReceived = this.socket.receive();
-				
-			//String message = new String(packetReceived.getData());
-			
-			this.socket.send(message);
-		}
 	}
 	
-	public void setServerSocket(NetworkAccess serverSocket){
-		this.socket = serverSocket;
-	}
-	
-	public static void main(String[] args) {
+	public BuyServer(String serverPort, String connectionType) {
+		System.out.println("Starting SellServer on port " + serverPort + "...");
 
 		try{
-			System.out.println("Starting SellServer on port " + args[0] + "...");
-			if(args[1].toLowerCase() == "udp")
-				new BuyServer(new UDPHandler(Integer.parseInt(args[0])));
-			else if(args[1].toLowerCase() == "tcp")
-				new BuyServer(new TCPHandler(Integer.parseInt(args[0])));
-			else
-				new BuyServer(new HTTPHandler(Integer.parseInt(args[0])));
+			this.connect(serverPort, connectionType);
+			System.out.println("BuyServer succesfully started on port " + this.socket.getPort() + ".");
+
+			while(true) {
+					
+				Message packetReceived = this.socket.receive();
+						
+				Message replyMessage = new Message("action", "accessToken", 0, "name", 
+				"author", 0.00, packetReceived.getPort(), packetReceived.getAddress());
+				this.socket.send(replyMessage);
+			}
 		}
 		catch(IOException e){
 			e.printStackTrace();
 		}
-
 		
+	}
+	
+	public void connect(String serverPort, String connectionType) throws IOException{
+		System.out.println("Starting SellServer on port " + serverPort + "...");
+		try{
+
+			switch (connectionType.toLowerCase()) {
+				case "udp":
+					this.socket = new UDPHandler(Integer.parseInt(serverPort));
+					this.registerLoadBalancer();
+					break;
+				case "tcp" : break;
+				case "http": break;
+				default:
+					System.out.println("Unknown connection type. Aborting server...");
+					System.exit(0);
+					break;
+			}
+
+		}
+		catch(IOException e){
+			e.printStackTrace();
+		}
+	}
+	
+	public static void main(String[] args) {
+		new BuyServer(args[0], args[1]);
 	}
 
 }

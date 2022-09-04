@@ -1,41 +1,78 @@
 package database;
 
 import java.io.IOException;
-import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import application.Server;
 import model.Book;
 
 import network.Message;
+import network.NetworkAccess;
+import network.UDPHandler;
 
-public class Database {
+public class Database implements Server{
 
 	public List<Book> database;
+
+	public NetworkAccess socket;
 	
 	
-	public void add(Book book) {
-		this.database.add(book);
+	public Database(String serverPort, String connectionType) {
+		System.out.println("Starting Database server on port "+ "serverPort" +"..." );
+		this.database = new ArrayList<Book>();
+
+		try {
+			this.connect(serverPort, connectionType);
+			System.out.println("Database server succesfully started at port " + serverPort + ".");
+			
+			Message packetReceived = this.socket.receive();
+
+
+			this.socket.send(packetReceived);
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
-	
-	public void remove(Integer id) {
-		this.database.remove(id);
+
+
+	public void connect(String serverPort, String connectionType){
+		try {
+			switch (connectionType.toLowerCase()) {
+				case "udp":
+					this.socket = new UDPHandler(Integer.parseInt(serverPort));
+					this.registerLoadBalancer();
+					break;
+
+				case "tcp": break;
+				case "http": break;
+
+				default:
+					System.out.println("Unknown connection type. Aborting server...");
+					System.exit(0);
+					break;
+			}
+		} catch (IOException e) {
+			
+		}
 	}
-	
-	public void update(Integer id, Book book) {
-		this.remove(id);
-		this.add(book);
+
+	public void registerLoadBalancer(){
+
 	}
 	
 	
 	public void operate(Message message) {
-		switch(message.getAction()) {
+		switch(message.getAction().toUpperCase()) {
 			case "CREATE":
 				Book newBook = new Book(message.getName(), message.getAuthor(), message.getPrice());
-				this.add(newBook);
+				this.save(newBook);
 				break;
 				
 			case "DELETE":
-				this.remove(message.getId());
+				this.delete(message.getId());
 				break;
 				
 				
@@ -45,51 +82,23 @@ public class Database {
 		}
 	}
 	
-	public Database(String port) {
-		System.out.println("Starting Database server at port" + port + "...");
-		this.database = new ArrayList<Book>();
-		try {
-			
-			DatagramSocket serverSocket = new DatagramSocket(Integer.getInteger(port));
-			System.out.println("Database server succesfully started at port " + port + ".");
-			
-			
-			byte[] packet = new byte[1024];
-			DatagramPacket receivedPacket = new DatagramPacket(packet, packet.length);
-			serverSocket.receive(receivedPacket);
-			
-			String message = new String(receivedPacket.getData());
-			System.out.println("Message received: " + message);
-			
-			//receber em string e converter para Gson
-			//usar os metodos get do Gson e criar uma instancia Message
-			
-			//Message mes = new Message(receivedPacket.getData());    --- protocolo binario (byte para classe java)
-			
-			
-			byte[] reply = new byte[1024];
-			DatagramPacket replyPacket = new DatagramPacket(reply, reply.length, 
-					receivedPacket.getAddress(), receivedPacket.getPort());
-			serverSocket.send(replyPacket);
-		}
-		catch(IOException e) {
-			e.printStackTrace();
-		}
-		
+	
+	public void save(Book book) {
+		this.database.add(book);
+	}
+
+	public void update(Integer id, Book book) {
+		this.delete(id);
+		this.save(book);
 	}
 	
-	
-	
-	public void save(String item) {
-		
+	public void delete(Integer id) {
+		this.database.remove(id);
 	}
-	
-	public void deleter(String item) {
-		
-	}
+
 	
 	public static void main(String[] args) {
-		new Database(args[0]);
+		new Database(args[0], args[1]);
 
 	}
 

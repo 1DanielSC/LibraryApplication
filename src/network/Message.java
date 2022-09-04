@@ -1,11 +1,11 @@
 package network;
 
 import java.net.InetAddress;
-import com.google.gson.*;
 
 public class Message {
 	public String action;
-	
+	public String error;
+
 	public String accessToken;
 	
 	public Integer id;
@@ -46,6 +46,12 @@ public class Message {
 	}
 	public Integer getPort() {
 		return port;
+	}
+	public String getError(){
+		return error;
+	}
+	public void setError(String error){
+		this.error = error;
 	}
 
 

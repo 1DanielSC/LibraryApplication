@@ -3,6 +3,9 @@ package network;
 import java.io.IOException;
 import java.net.*;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 public class UDPHandler implements NetworkAccess {
 	
 	public DatagramSocket socket;
@@ -17,31 +20,43 @@ public class UDPHandler implements NetworkAccess {
 
 		this.socket.receive(receivedPacket);
 
-		String message = new String(receivedPacket.getData());
-		//receivedPacket.getData() retorna um vetor de bytes
-		//A classe String possui um construtor que transforma um vetor de bytes em string
+		Message messageReceived = this.getMessage(receivedPacket.getData());
 
-		//Precisamos agora pegar essa string e transformá-la num objeto JSON
+		return messageReceived;
+	}
 
 
-		System.out.println(message);
-		
-		
+	private Message getMessage(byte[] binaryMessage){
+		String message = new String(binaryMessage);
 
-		Message packetMessage = new Message("action", "accessToken", 0, "name", "author", 0.00, 0, message.get);
+		GsonBuilder builder = new GsonBuilder();
+		builder.setPrettyPrinting();
+		Gson gson = builder.create();
 
-		return packetMessage;
+		return gson.fromJson(message, Message.class);
 	}
 
 	public void send(Message message) throws IOException {
-		
-		byte[] packetBytes = new byte[1024];
 		//message to bytes
+		byte[] packetBytes = this.serialize(message);
 		
 		DatagramPacket packet = new DatagramPacket(packetBytes,packetBytes.length,message.getAddress(),message.getPort());
 		this.socket.send(packet);
 	}
 	
+	private byte[] serialize(Message message){
+		GsonBuilder builder = new GsonBuilder();
+		builder.setPrettyPrinting();
+		Gson gson = builder.create();
+
+		byte[] serializedMessage = new byte[1024];
+		String stringMessage = gson.toJson(message);
+		serializedMessage = stringMessage.getBytes();
+
+		return serializedMessage;
+	}
+
+
 	public void register() throws IOException{
 		
 	}

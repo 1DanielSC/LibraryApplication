@@ -1,9 +1,11 @@
 package application;
 
-import network.NetworkAccess;
+import java.io.IOException;
 
 public interface Server {
-	public void registerLoadBalance();
-	public void setNetworkAccess(NetworkAccess serverSocket);
+
+	public void connect(String serverPort, String connectionType) throws IOException;
+
+	public void registerLoadBalancer();
 
 }
