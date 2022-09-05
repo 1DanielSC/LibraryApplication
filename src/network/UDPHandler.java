@@ -11,16 +11,23 @@ public class UDPHandler implements NetworkAccess {
 	public DatagramSocket socket;
 	
 	public UDPHandler(Integer port) throws IOException {
+		System.out.println("Port: " + port);
 		this.socket = new DatagramSocket(port);
 	}
 	
 	public Message receive() throws IOException{
 		byte[] packet = new byte[1024];
 		DatagramPacket receivedPacket = new DatagramPacket(packet,packet.length);
-
+		
 		this.socket.receive(receivedPacket);
 
 		Message messageReceived = this.getMessage(receivedPacket.getData());
+		
+		//fixed !!! Now refactor it!
+		messageReceived.setPort(receivedPacket.getPort());
+		messageReceived.setAddress(receivedPacket.getAddress());
+		
+		System.out.println(messageReceived);
 
 		return messageReceived;
 	}
@@ -29,11 +36,15 @@ public class UDPHandler implements NetworkAccess {
 	private Message getMessage(byte[] binaryMessage){
 		String message = new String(binaryMessage);
 
-		GsonBuilder builder = new GsonBuilder();
-		builder.setPrettyPrinting();
-		Gson gson = builder.create();
+		//GsonBuilder builder = new GsonBuilder();
+		//builder.setPrettyPrinting();
+		//Gson gson = builder.create();
+		//Gson gson = new Gson();
+		Gson gson = new GsonBuilder()
+        .setLenient().serializeNulls()
+        .create();
 
-		return gson.fromJson(message, Message.class);
+		return gson.fromJson(message.trim(), Message.class);
 	}
 
 	public void send(Message message) throws IOException {
@@ -41,14 +52,18 @@ public class UDPHandler implements NetworkAccess {
 		byte[] packetBytes = this.serialize(message);
 		
 		DatagramPacket packet = new DatagramPacket(packetBytes,packetBytes.length,message.getAddress(),message.getPort());
+		
 		this.socket.send(packet);
 	}
 	
 	private byte[] serialize(Message message){
-		GsonBuilder builder = new GsonBuilder();
-		builder.setPrettyPrinting();
-		Gson gson = builder.create();
-
+		//GsonBuilder builder = new GsonBuilder();
+		//builder.setPrettyPrinting();
+		//Gson gson = builder.create();
+		Gson gson = new GsonBuilder()
+		        .setLenient().serializeNulls()
+		        .create();
+		
 		byte[] serializedMessage = new byte[1024];
 		String stringMessage = gson.toJson(message);
 		serializedMessage = stringMessage.getBytes();
@@ -62,10 +77,10 @@ public class UDPHandler implements NetworkAccess {
 	}
 
 	public int getPort(){
-		return this.socket.getPort();
+		return this.socket.getLocalPort();
 	}
 
 	public InetAddress getInetAddress(){
-		return this.socket.getInetAddress();
+		return this.socket.getLocalAddress();
 	}
 }

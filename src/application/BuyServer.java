@@ -18,7 +18,6 @@ public class BuyServer implements Server{
 	}
 	
 	public BuyServer(String serverPort, String connectionType) {
-		System.out.println("Starting SellServer on port " + serverPort + "...");
 
 		try{
 			this.connect(serverPort, connectionType);
@@ -27,8 +26,10 @@ public class BuyServer implements Server{
 			while(true) {
 					
 				Message packetReceived = this.socket.receive();
+
+				System.out.println(packetReceived.toString());
 						
-				Message replyMessage = new Message("action", "accessToken", 0, "name", 
+				Message replyMessage = new Message("action", "", "accessToken", 0, "name", 
 				"author", 0.00, packetReceived.getPort(), packetReceived.getAddress());
 				this.socket.send(replyMessage);
 			}
@@ -40,7 +41,7 @@ public class BuyServer implements Server{
 	}
 	
 	public void connect(String serverPort, String connectionType) throws IOException{
-		System.out.println("Starting SellServer on port " + serverPort + "...");
+		System.out.println("Starting BuyServer on port " + serverPort + "...");
 		try{
 
 			switch (connectionType.toLowerCase()) {
