@@ -13,7 +13,7 @@ public class BuyServer implements Server{
 	public NetworkAccess socket;
 	
 	
-	public void registerLoadBalancer(){
+	public void registerLoadBalancer(String serverPort){
 
 	}
 	
@@ -47,13 +47,13 @@ public class BuyServer implements Server{
 			switch (connectionType.toLowerCase()) {
 				case "udp":
 					this.socket = new UDPHandler(Integer.parseInt(serverPort));
-					this.registerLoadBalancer();
+					this.registerLoadBalancer(serverPort);
 					break;
 				case "tcp" : break;
 				case "http": break;
 				default:
 					System.out.println("Unknown connection type. Aborting server...");
-					System.exit(0);
+					System.exit(1);
 					break;
 			}
 

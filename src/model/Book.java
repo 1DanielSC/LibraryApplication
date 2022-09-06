@@ -2,11 +2,19 @@ package model;
 
 public class Book {
 	
+	public Integer id;
 	public String name;
 	public String author;
 	public Double price;
 	
 	public Book(String name, String author, Double price) {
+		this.name = name;
+		this.author = author;
+		this.price = price;
+	}
+
+	public Book(Integer id, String name, String author, Double price){
+		this.id = id;
 		this.name = name;
 		this.author = author;
 		this.price = price;
@@ -56,5 +64,13 @@ public class Book {
 		} else if (!name.equals(other.name))
 			return false;
 		return true;
+	}
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
 	}
 }

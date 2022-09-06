@@ -2,6 +2,9 @@ package application;
 
 import java.io.IOException;
 
+import model.Book;
+import network.AbstractMessage;
+import network.DatabaseMessage;
 import network.Message;
 import network.NetworkAccess;
 import network.UDPHandler;
@@ -13,7 +16,6 @@ public class SellServer implements Server {
 
 	public SellServer(String serverPort, String connectionType) {
 
-		System.out.println("Starting SellServer on port " + serverPort + "...");
 		try {
 			this.connect(serverPort, connectionType);
 
@@ -23,14 +25,22 @@ public class SellServer implements Server {
 				//receive packet
 				Message packetMessage = this.socket.receive();
 				
+				System.out.println("Vou enviar um pacote");
+				//process the packet received
+				DatabaseMessage responseFromDatabase = this.sendToDatabase(packetMessage);
 				
-				//process information
-				this.processInformation(packetMessage);
 
-				//reply packet
-				Message replyMessage = new Message("action", "accessToken", 0, "name", 
-								"author", 0.00, packetMessage.getPort(), packetMessage.getAddress());
+				Message replyMessage = new Message();
+				replyMessage.setPort(packetMessage.getPort());
+				replyMessage.setAddress(packetMessage.getAddress());
 
+
+				if(!responseFromDatabase.getError().toUpperCase().equals("OK"))
+					replyMessage.setError("Error: it was not possible to save the book");
+				else
+					replyMessage.setError("OK");
+
+				
 				this.socket.send(replyMessage);
 			}
 		} catch (IOException e) {
@@ -49,7 +59,7 @@ public class SellServer implements Server {
 
 				case "udp":
 					this.socket = new UDPHandler(Integer.parseInt(serverPort));
-					this.registerLoadBalancer();
+					this.registerLoadBalancer(serverPort);
 					break;
 
 				case "tcp": break; //TODO
@@ -57,7 +67,7 @@ public class SellServer implements Server {
 
 				default:
 					System.out.println("Unknown connection type. Aborting server...");
-					System.exit(0);
+					System.exit(1);
 					break;
 			}
 		}
@@ -66,18 +76,23 @@ public class SellServer implements Server {
 		}
 	}
 
-	public void processInformation(Message packetReceived){
-		switch (packetReceived.getAction()) {
-			case "CREATE":
-				
-				break;
-		
-			default:
-				break;
-		}
+
+
+	public DatabaseMessage sendToDatabase(Message message) throws IOException{
+		System.out.println(message.getName() + message.getAuthor() + message.getPrice());
+		System.out.println("hi");
+		Book bookToSend = new Book(message.getName(), message.getAuthor(), message.getPrice());
+
+		DatabaseMessage databaseMessage = new DatabaseMessage("CREATE", bookToSend, 9000);
+		databaseMessage.setAddress(message.getAddress());
+
+		this.socket.send(databaseMessage); //send to database
+		DatabaseMessage response = this.socket.receiveDatabaseMessage(); //receive response from database
+
+		return response;
 	}
 	
-	public void registerLoadBalancer(){
+	public void registerLoadBalancer(String serverPort){
 
 	}
 	

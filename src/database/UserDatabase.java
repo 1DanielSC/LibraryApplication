@@ -35,6 +35,7 @@ public class UserDatabase implements Server{
             switch(connectionType.toLowerCase()){
                 case "udp":
                     this.socket = new UDPHandler(Integer.parseInt(databasePort));
+                    this.registerLoadBalancer(databasePort);
                     break;
 
                 case "tcp":break; //TODO
@@ -42,7 +43,7 @@ public class UserDatabase implements Server{
 
                 default:
                     System.out.println("Unknown connection type. Aborting server...");
-                    System.exit(0);
+                    System.exit(1);
                     break;
             }
         } catch (IOException e) {
@@ -58,7 +59,7 @@ public class UserDatabase implements Server{
         this.database.remove(id);
     }
 
-    public void registerLoadBalancer(){
+    public void registerLoadBalancer(String databasePort){
 
     }
 }

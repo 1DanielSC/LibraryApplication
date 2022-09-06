@@ -2,9 +2,7 @@ package network;
 
 import java.net.InetAddress;
 
-public class Message {
-	public String action;
-	public String error;
+public class Message extends AbstractMessage {
 
 	public String accessToken;
 	
@@ -13,21 +11,19 @@ public class Message {
 	public String author;
 	public Double price;
 	
-	public Integer port;
-	public InetAddress address;
-	
-	public Message(String action, String accessToken, Integer id, String name, String author, Double price, Integer port, InetAddress address) {
-		super();
-		this.action = action;
+	public Message(){
+		
+	}
+
+	public Message(String action, String error, String accessToken, Integer id, String name, String author, Double price, Integer port, InetAddress address) {
+		super(action, error, port, address);
+
 		this.accessToken = accessToken;
 		this.id = id;
 		this.name = name;
 		this.author = author;
 		this.price = price;
-		this.port = port;
-		this.address = address;
 	}
-	
 	
 	public String getAction() {
 		return action;
@@ -92,5 +88,12 @@ public class Message {
 		this.price = price;
 	}
 	
+
+	@Override
+	public String toString() {
+		return "Message [accessToken=" + accessToken + ", action=" + action + ", address=" + address + ", author="
+				+ author + ", error=" + error + ", id=" + id + ", name=" + name + ", port=" + port + ", price=" + price
+				+ "]";
+	}
 	
 }

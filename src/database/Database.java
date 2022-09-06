@@ -6,8 +6,7 @@ import java.util.List;
 
 import application.Server;
 import model.Book;
-
-import network.Message;
+import network.DatabaseMessage;
 import network.NetworkAccess;
 import network.UDPHandler;
 
@@ -24,12 +23,19 @@ public class Database implements Server{
 
 		try {
 			this.connect(serverPort, connectionType);
-			System.out.println("Database server succesfully started at port " + serverPort + ".");
 			
-			Message packetReceived = this.socket.receive();
+			System.out.println("Database server succesfully started on port " + this.socket.getPort() + ".");
+			while(true){
+				DatabaseMessage packetReceived = this.socket.receiveDatabaseMessage();
+				System.out.println("Pacote recebido (BD): " + packetReceived.toString());
+				DatabaseMessage replyMessage = this.operate(packetReceived);
+				replyMessage.setPort(packetReceived.getPort());
+				replyMessage.setAddress(packetReceived.getAddress());
+
+				this.socket.send(replyMessage);
+			}
 
 
-			this.socket.send(packetReceived);
 		}
 		catch(IOException e) {
 			e.printStackTrace();
@@ -43,7 +49,7 @@ public class Database implements Server{
 			switch (connectionType.toLowerCase()) {
 				case "udp":
 					this.socket = new UDPHandler(Integer.parseInt(serverPort));
-					this.registerLoadBalancer();
+					this.registerLoadBalancer(serverPort);
 					break;
 
 				case "tcp": break;
@@ -51,7 +57,7 @@ public class Database implements Server{
 
 				default:
 					System.out.println("Unknown connection type. Aborting server...");
-					System.exit(0);
+					System.exit(1);
 					break;
 			}
 		} catch (IOException e) {
@@ -59,43 +65,68 @@ public class Database implements Server{
 		}
 	}
 
-	public void registerLoadBalancer(){
+	public void registerLoadBalancer(String serverPort){
 
 	}
 	
 	
-	public void operate(Message message) {
+	public DatabaseMessage operate(DatabaseMessage message) {
+		DatabaseMessage response = new DatabaseMessage();
 		switch(message.getAction().toUpperCase()) {
 			case "CREATE":
-				Book newBook = new Book(message.getName(), message.getAuthor(), message.getPrice());
-				this.save(newBook);
-				break;
+				this.save(message.getBook());
+				response.setError("OK");
+				return response;
+				
 				
 			case "DELETE":
-				this.delete(message.getId());
-				break;
+				if(this.delete(message.getBook().getId()))
+					response.setError("OK");
+				else response.setError("Error: Book not found");
+				return response;
 				
 				
 			case "UPDATE":
-				this.update(message.getId(), new Book(message.getName(), message.getAuthor(), message.getPrice()));
-				break;	
+				if(this.update(message.getBook().getId(), new Book(message.getBook().getName(), message.getBook().getAuthor(), message.getBook().getPrice())))
+					response.setError("OK");
+				else response.setError("Error: Book not found");
+				return response;
+
+			case "SELECTBYID":
+				Book queryResult = this.selectById(message.getBook().getId());
+				if(queryResult == null)
+					response.setError("Error: No book found");
+				else
+					response.setBook(queryResult);response.setError("OK");
+				return response;
+
+			default:
+				response.setError("FAIL");
+				return response;
 		}
 	}
 	
 	
 	public void save(Book book) {
+		book.setId(this.database.size());
 		this.database.add(book);
 	}
 
-	public void update(Integer id, Book book) {
-		this.delete(id);
-		this.save(book);
+	public boolean update(Integer id, Book book) {
+		if(this.delete(id)){
+			this.save(book);
+			return true;
+		}
+		return false;
 	}
 	
-	public void delete(Integer id) {
-		this.database.remove(id);
+	public boolean delete(Integer id) {
+		return this.database.remove(id);
 	}
 
+	public Book selectById(Integer id){
+		return this.database.get(id);
+	}
 	
 	public static void main(String[] args) {
 		new Database(args[0], args[1]);
