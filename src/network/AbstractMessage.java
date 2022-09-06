@@ -1,8 +1,9 @@
 package network;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 
-public class AbstractMessage {
+public class AbstractMessage implements Serializable{
     protected String action;
     protected String error;
     protected Integer port;

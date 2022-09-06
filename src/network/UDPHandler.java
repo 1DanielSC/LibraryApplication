@@ -8,7 +8,7 @@ import com.google.gson.GsonBuilder;
 
 public class UDPHandler implements NetworkAccess {
 	
-	public DatagramSocket socket;
+	public final DatagramSocket socket;
 	
 	public UDPHandler(Integer port) throws IOException {
 		System.out.println("Port: " + port);

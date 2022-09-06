@@ -4,7 +4,7 @@ import java.net.InetAddress;
 
 import model.Book;
 
-public class DatabaseMessage extends AbstractMessage{
+public class DatabaseMessage extends AbstractMessage {
     
     public Book book;
 

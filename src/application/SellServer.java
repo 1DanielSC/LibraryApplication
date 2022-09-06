@@ -7,6 +7,7 @@ import network.AbstractMessage;
 import network.DatabaseMessage;
 import network.Message;
 import network.NetworkAccess;
+import network.TCPHandler;
 import network.UDPHandler;
 
 
@@ -62,7 +63,11 @@ public class SellServer implements Server {
 					this.registerLoadBalancer(serverPort);
 					break;
 
-				case "tcp": break; //TODO
+				case "tcp": 
+					this.socket = new TCPHandler(Integer.parseInt(serverPort));
+					this.registerLoadBalancer(serverPort);
+					break; //TODO
+					
 				case "http": break; //TODO
 
 				default:
