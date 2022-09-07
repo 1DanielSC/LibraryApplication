@@ -9,11 +9,15 @@ public class LoadBalancer {
     public NetworkAccess socket;
     public HashMap<String, ArrayList<Integer>> microServices;
 
+    public int lastBuyServer;
+    public int lastSellServer;
 
     public LoadBalancer(String port, String connectionProtocol){
 
-
         this.microServices = new HashMap<>();
+        this.lastBuyServer = 0;
+        this.lastSellServer = 0;
+
         try {
             this.connect(port, connectionProtocol);
 
@@ -56,7 +60,7 @@ public class LoadBalancer {
     }
 
 
-    public void addInstance(String route, Integer port){
+    public void registerServerInstance(String route, Integer port){
         if(!this.microServices.containsKey(route)){
             this.microServices.put(route, new ArrayList<>(port));
             return;
@@ -69,8 +73,24 @@ public class LoadBalancer {
         }
     }
 
-    public void roundRobinAlgorithm(String route){
+    public int roundRobinAlgorithm(String route){
         ArrayList<Integer> instances = this.microServices.get(route);
+
+        int port = -1;
+        int size = instances.size();
+
+        if(route.equals("/buy")){
+            this.lastBuyServer++;
+            this.lastBuyServer = this.lastBuyServer%size;
+            port = this.lastBuyServer;
+        }
+        else if(route.equals("/sell")){
+            this.lastSellServer++;
+            this.lastSellServer = this.lastSellServer%size;
+            port = this.lastSellServer;
+        }
+
+        return port;
     }
 
     //check aliveness of instance
