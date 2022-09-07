@@ -7,6 +7,12 @@ public class Book {
 	public String author;
 	public Double price;
 	
+	public Book(){
+		this.name = "";
+		this.author = "";
+		this.price = 0.00;
+	}
+
 	public Book(String name, String author, Double price) {
 		this.name = name;
 		this.author = author;
@@ -72,5 +78,10 @@ public class Book {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	@Override
+	public String toString() {
+		return "Book [author=" + author + ", id=" + id + ", name=" + name + ", price=" + price + "]";
 	}
 }

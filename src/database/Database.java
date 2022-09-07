@@ -18,7 +18,7 @@ public class Database implements Server{
 	
 	
 	public Database(String serverPort, String connectionType) {
-		System.out.println("Starting Database server on port "+ "serverPort" +"..." );
+		System.out.println("Starting Database server on port "+ serverPort + "..." );
 		this.database = new ArrayList<Book>();
 
 		try {
@@ -27,7 +27,9 @@ public class Database implements Server{
 			System.out.println("Database server succesfully started on port " + this.socket.getPort() + ".");
 			while(true){
 				DatabaseMessage packetReceived = this.socket.receiveDatabaseMessage();
+
 				System.out.println("Pacote recebido (BD): " + packetReceived.toString());
+				
 				DatabaseMessage replyMessage = this.operate(packetReceived);
 				replyMessage.setPort(packetReceived.getPort());
 				replyMessage.setAddress(packetReceived.getAddress());
@@ -110,6 +112,7 @@ public class Database implements Server{
 	public void save(Book book) {
 		book.setId(this.database.size());
 		this.database.add(book);
+		System.out.println(this.database.toString());
 	}
 
 	public boolean update(Integer id, Book book) {

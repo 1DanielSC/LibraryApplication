@@ -12,7 +12,7 @@ public class Message extends AbstractMessage {
 	public Double price;
 	
 	public Message(){
-		
+		super();
 	}
 
 	public Message(String action, String error, String accessToken, Integer id, String name, String author, Double price, Integer port, InetAddress address) {

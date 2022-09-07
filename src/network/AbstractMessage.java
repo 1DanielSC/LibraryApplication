@@ -10,7 +10,10 @@ public class AbstractMessage implements Serializable{
     protected InetAddress address;
 
     public AbstractMessage(){
-
+        this.action = "";
+        this.error = "";
+        this.port = 0;
+        this.address = null;
     }
 
     public AbstractMessage(String action, String error, Integer port, InetAddress address) {

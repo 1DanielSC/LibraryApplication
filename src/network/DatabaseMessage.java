@@ -9,7 +9,8 @@ public class DatabaseMessage extends AbstractMessage {
     public Book book;
 
     public DatabaseMessage(){
-        
+        super();
+        this.book = new Book();
     }
 
     public DatabaseMessage(String action, String error, Book book, Integer port, InetAddress address) {
@@ -38,7 +39,7 @@ public class DatabaseMessage extends AbstractMessage {
 
     @Override
     public String toString() {
-        return "DatabaseMessage [book=" + book + "]";
+        return "DatabaseMessage [book=" + book.toString() + "]" + " [action= " + this.getAction()+"]";
     }
     
 }
