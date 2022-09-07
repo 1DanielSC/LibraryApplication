@@ -39,6 +39,27 @@ public class TCPHandler implements NetworkAccess{
 		}
 	}
 	
+
+	public void send(Message message, Integer port) throws IOException{ //send back to JMeter
+		Socket connection = null;
+		try {
+			connection = new Socket ("localhost", port);//message.getPort() = JMeter port
+			ObjectOutputStream output = new
+			ObjectOutputStream(connection.getOutputStream());
+				
+			output.writeObject(message);
+			output.flush();
+			
+			try {
+				connection.close();
+			}catch(IOException e) {
+				e.printStackTrace();
+			}
+			
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public void send(DatabaseMessage databaseMessage) throws IOException{ //send to database
 		Socket connection = null;

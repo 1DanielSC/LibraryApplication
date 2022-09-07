@@ -1,6 +1,7 @@
 package application;
 
 import java.io.IOException;
+import java.net.InetAddress;
 
 import model.Book;
 import network.DatabaseMessage;
@@ -16,8 +17,19 @@ public class BuyServer implements Server{
 	public NetworkAccess socket;
 	
 	
-	public void registerLoadBalancer(String serverPort){
+	public void registerIntoLoadBalancer(String serverPort){
+		try {
+			Message messageToLoadBalancer = new Message();
+			messageToLoadBalancer.setAction("create buy instance");
 
+			messageToLoadBalancer.setAddress(InetAddress. getLocalHost());
+			messageToLoadBalancer.setId(this.socket.getPort());
+			System.out.println("Buy Server: Vou me registrar no Load Balancer");
+			this.socket.send(messageToLoadBalancer, 9050);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public BuyServer(String serverPort, String connectionType) {
@@ -59,12 +71,12 @@ public class BuyServer implements Server{
 			switch (connectionType.toLowerCase()) {
 				case "udp":
 					this.socket = new UDPHandler(Integer.parseInt(serverPort));
-					this.registerLoadBalancer(serverPort);
+					this.registerIntoLoadBalancer(serverPort);
 					break;
 
 				case "tcp" : 
 					this.socket = new TCPHandler(Integer.parseInt(serverPort));
-					this.registerLoadBalancer(serverPort);
+					this.registerIntoLoadBalancer(serverPort);
 				break;
 				
 				case "http": break;

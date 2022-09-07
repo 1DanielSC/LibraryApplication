@@ -51,7 +51,7 @@ public class Database implements Server{
 			switch (connectionType.toLowerCase()) {
 				case "udp":
 					this.socket = new UDPHandler(Integer.parseInt(serverPort));
-					this.registerLoadBalancer(serverPort);
+					this.registerIntoLoadBalancer(serverPort);
 					break;
 
 				case "tcp": break;
@@ -67,7 +67,7 @@ public class Database implements Server{
 		}
 	}
 
-	public void registerLoadBalancer(String serverPort){
+	public void registerIntoLoadBalancer(String serverPort){
 
 	}
 	

@@ -75,6 +75,15 @@ public class UDPHandler implements NetworkAccess {
 		
 		this.socket.send(packet);
 	}
+
+	public void send(Message message, Integer port) throws IOException{
+		byte[] packetBytes = this.serializeMessage(message);
+		
+		System.out.println("Address: " + message.getAddress());
+		DatagramPacket packet = new DatagramPacket(packetBytes, packetBytes.length, message.getAddress(), port);
+		
+		this.socket.send(packet);
+	}
 	
 
 	private byte[] serializeMessage(Message message){

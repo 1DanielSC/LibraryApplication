@@ -5,6 +5,7 @@ import java.net.InetAddress;
 
 public interface NetworkAccess {
 	public void send(Message message) throws IOException;
+	public void send(Message message, Integer port) throws IOException;
 	public void send(DatabaseMessage databaseMessage) throws IOException;
 
 
