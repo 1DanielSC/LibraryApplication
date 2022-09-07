@@ -36,7 +36,7 @@ public class BuyServer implements Server{
 				replyMessage.setPort(packetReceived.getPort());
 				replyMessage.setAddress(packetReceived.getAddress());
 				
-				System.out.println("Response from database: " + replyMessage.getError());
+				System.out.println("Response from database: " + responseFromDatabase.getError());
 				
 				if(!responseFromDatabase.getError().toUpperCase().equals("OK"))
 					replyMessage.setError("Error: it was not possible to save the book");

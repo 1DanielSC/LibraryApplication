@@ -35,6 +35,7 @@ public class SellServer implements Server {
 				replyMessage.setPort(packetMessage.getPort());
 				replyMessage.setAddress(packetMessage.getAddress());
 
+				System.out.println("Response from database: " + responseFromDatabase.getError());
 
 				if(!responseFromDatabase.getError().toUpperCase().equals("OK"))
 					replyMessage.setError("Error: it was not possible to save the book");
