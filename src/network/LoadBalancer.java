@@ -42,7 +42,10 @@ public class LoadBalancer {
                 // send back OK message to JMeter - we need to store its port
                 if(!packetReceived.getError().equals("")){
                     System.out.println("Load Balancer: sending to JMeter on port " + this.jmeterPort);
-                    this.socket.send(packetReceived, this.jmeterPort); //fix: port is 0
+
+                    this.socket.send(packetReceived, this.jmeterPort); //fix: Load Balancer: sending to JMeter on port 50480
+                                                                //Handler: sending to port: 50480
+                                                                    //Database receiving Book with all values set to null
                     continue;
                 }
 
