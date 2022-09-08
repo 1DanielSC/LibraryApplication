@@ -23,7 +23,7 @@ public class UDPHandler implements NetworkAccess {
 
 		Message messageReceived = this.deserializeMessage(receivedPacket.getData());
 		
-		//fixed !!! Now refactor it!
+		//get port and address from who sent the packet
 		messageReceived.setPort(receivedPacket.getPort());
 		messageReceived.setAddress(receivedPacket.getAddress());
 		
