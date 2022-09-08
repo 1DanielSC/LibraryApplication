@@ -29,6 +29,11 @@ public class LoadBalancer {
                     //receive from server instances
                     //receive from JMeter (route + data)
                 Message packetReceived = this.socket.receive();
+                this.socket.send(packetReceived, packetReceived.getPort()); //adicionei para testar direto no jmeter
+                	//o JMeter recebeu - OK!! pROBLEMA ESTA AQUI EM BAIXO
+                
+                
+                
                 System.out.println("Load Balancer: " + packetReceived.toString());
                 System.out.println("Load Balancer (ACTION): " + packetReceived.getAction().toLowerCase());
                 //request sent from JMeter - we need to save its port to send back message to it
@@ -41,11 +46,11 @@ public class LoadBalancer {
 
                 // send back OK message to JMeter - we need to store its port
                 if(!packetReceived.getError().equals("")){
-                    System.out.println("Load Balancer: sending to JMeter on port " + this.jmeterPort);
-
-                    this.socket.send(packetReceived, this.jmeterPort); //fix: Load Balancer: sending to JMeter on port 50480
-                                                                //Handler: sending to port: 50480
-                                                                    //Database receiving Book with all values set to null
+                    packetReceived.setPort(this.jmeterPort);
+                    System.out.println("Load Balancer: sending to JMeter on port " + packetReceived.getPort());
+                    
+                    System.out.println("Load Balancer: Sending to JMeter: " + packetReceived.toString());
+                    this.socket.send(packetReceived, packetReceived.getPort());
                     continue;
                 }
 

@@ -82,7 +82,9 @@ public class UDPHandler implements NetworkAccess {
 		System.out.println("Handler: sending to port: " + port);
 		DatagramPacket packet = new DatagramPacket(packetBytes, packetBytes.length, message.getAddress(), port);
 		
+		System.out.println("Handler: " + message.toString());
 		this.socket.send(packet);
+		System.out.println("Handler: enviei o pacote");
 	}
 	
 
