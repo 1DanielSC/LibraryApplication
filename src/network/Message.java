@@ -15,6 +15,19 @@ public class Message extends AbstractMessage {
 		super();
 	}
 
+	public Message (Message other){
+		this.accessToken = other.getAccessToken();
+		this.error = other.getError();
+		
+		this.id = other.getId();
+		this.name = other.getName();
+		this.author = other.getAuthor();
+		this.price = other.getPrice();
+
+		this.address = other.getAddress();
+		this.port = other.getPort();
+	}
+
 	public Message(String action, String error, String accessToken, Integer id, String name, String author, Double price, Integer port, InetAddress address) {
 		super(action, error, port, address);
 
