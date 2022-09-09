@@ -54,7 +54,8 @@ public class BuyServer implements Server{
 					replyMessage.setError("Error: it was not possible to save the book");
 				else
 					replyMessage.setError("OK");
-				
+
+				replyMessage.setAction("send back to JMeter");
 				this.socket.send(replyMessage);
 			}
 		}

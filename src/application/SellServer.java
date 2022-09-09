@@ -42,7 +42,7 @@ public class SellServer implements Server {
 				else
 					replyMessage.setError("OK");
 
-				
+				replyMessage.setAction("send back to JMeter");
 				this.socket.send(replyMessage);
 			}
 		} catch (IOException e) {

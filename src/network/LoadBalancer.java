@@ -25,6 +25,9 @@ public class LoadBalancer {
             this.connect(connectionProtocol);
             System.out.println("Load Balancer successfully started on port 9050");
             while(true){
+                this.teste();
+                /* 
+
                 //Receiving packet: Two possible scenarios
                     //receive from server instances
                     //receive from JMeter (route + data)
@@ -66,12 +69,88 @@ public class LoadBalancer {
                 if(packetToServer != null){
                     this.socket.send(packetToServer);
                 }
-                
+                */
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+
+
+
+    public void teste() throws IOException{
+        Message packetReceived = this.socket.receive();
+
+        //check action
+            //whether it's a JMeter request (API consumption) or Server request (LB register)
+
+        Message packet = this.operate2(packetReceived);
+        
+        if(packet != null) this.socket.send(packet);
+    }
+
+
+    public Message operate2(Message message){
+        Message replyMessage = new Message();
+        replyMessage.setError(message.getError());
+        replyMessage.setAddress(message.getAddress());
+        replyMessage.setId(message.getId());
+        replyMessage.setName(message.getName());
+        replyMessage.setPrice(message.getPrice());
+        replyMessage.setAccessToken(message.getAccessToken());
+        replyMessage.setAuthor(message.getAuthor());
+
+        int mappedPort = -1;
+
+        switch (message.getAction()) {
+            case "/buy":
+	            System.out.println("Load Balancer: JMeter port: " + message.getPort());
+	            this.jmeterPort = message.getPort();
+	
+	            mappedPort = this.roundRobinAlgorithm("/buy");
+	            replyMessage.setPort(mappedPort);
+	            replyMessage.setAction("create");
+	            return replyMessage;
+            
+            case "/sell":
+	            System.out.println("Load Balancer: JMeter port: " + message.getPort());
+	            this.jmeterPort = message.getPort();
+	
+	            mappedPort = this.roundRobinAlgorithm("/sell");
+	            replyMessage.setPort(mappedPort);
+	            replyMessage.setAction("remove");
+	            return replyMessage;
+
+            case "/login":
+	            System.out.println("Load Balancer: JMeter port: " + message.getPort());
+	            this.jmeterPort = message.getPort();
+	            return replyMessage;
+
+            case "create buy instance":
+	            System.out.println("Load Balancer: Vou registrar /buy");
+	            this.registerServerInstance("/buy", message.getId()); 
+	            break;
+
+            case "create sell instance":
+	            System.out.println("Load Balancer: Vou registrar /sell");
+	            this.registerServerInstance("/sell", message.getId()); 
+	            break;
+
+            case "send back to JMeter":
+	            replyMessage.setPort(this.jmeterPort);
+	            System.out.println("Load Balancer: Sending to JMeter: " + replyMessage.toString());
+	            System.out.println("Load Balancer: sending to JMeter on port " + replyMessage.getPort());
+	            return replyMessage;
+            
+
+            default:
+            	System.out.println("Load Balancer: Action not recognized");
+                break;
+        }
+
+        return null;
     }
 
 
@@ -94,7 +173,7 @@ public class LoadBalancer {
         }
     }
 
-    public Message operate(Message packetReceived) throws UnknownHostException{
+    public Message operate(Message packetReceived) throws UnknownHostException {
         int mappedPort = -1;
 
         Message packet = new Message();
@@ -117,8 +196,6 @@ public class LoadBalancer {
                 packet.setAction("create");
                 return packet; //packet for redirecting request to a BuyServer instance
                 
-                
-
             case "/sell":
                 mappedPort = this.roundRobinAlgorithm("/sell");
                 packet.setPort(mappedPort);
