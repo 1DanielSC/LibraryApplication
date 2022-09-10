@@ -59,7 +59,7 @@ public class LoadBalancer {
             case "/buy":
 	            System.out.println("Load Balancer: JMeter port: " + message.getPort());
 	            this.jmeterPort = message.getPort();
-	
+
 	            mappedPort = this.roundRobinAlgorithm("/buy");
 	            replyMessage.setPort(mappedPort);
 	            replyMessage.setAction("create");
@@ -68,7 +68,7 @@ public class LoadBalancer {
             case "/sell":
 	            System.out.println("Load Balancer: JMeter port: " + message.getPort());
 	            this.jmeterPort = message.getPort();
-	
+                
 	            mappedPort = this.roundRobinAlgorithm("/sell");
 	            replyMessage.setPort(mappedPort);
 	            replyMessage.setAction("remove");

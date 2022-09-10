@@ -22,9 +22,12 @@ public class BuyServer implements Server{
 			Message messageToLoadBalancer = new Message();
 			messageToLoadBalancer.setAction("create buy instance");
 
-			messageToLoadBalancer.setAddress(InetAddress. getLocalHost());
+			messageToLoadBalancer.setAddress(InetAddress.getLocalHost());
 			messageToLoadBalancer.setId(this.socket.getPort());
+			
+			System.out.println("Buy Server: minha porta: " + this.socket.getPort());
 			System.out.println("Buy Server: Vou me registrar no Load Balancer");
+
 			this.socket.send(messageToLoadBalancer, 9050);
 
 		} catch (IOException e) {
@@ -41,6 +44,8 @@ public class BuyServer implements Server{
 			while(true) {
 					
 				Message packetReceived = this.socket.receive();
+
+				System.out.println("BuyServer (receiving): " + packetReceived.toString());
 
 				DatabaseMessage responseFromDatabase = this.sendToDatabase(packetReceived);
 						
