@@ -1,8 +1,9 @@
 package network;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 
-public class Message extends AbstractMessage {
+public class Message extends AbstractMessage implements Serializable {
 
 	public String accessToken;
 	

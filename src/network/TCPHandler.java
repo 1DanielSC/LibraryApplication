@@ -28,14 +28,17 @@ public class TCPHandler implements NetworkAccess{
 			output.writeObject(message);
 			output.flush();
 			
-			try {
-				connection.close();
-			}catch(IOException e) {
-				e.printStackTrace();
-			}
 			
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				connection.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -50,14 +53,17 @@ public class TCPHandler implements NetworkAccess{
 			output.writeObject(message);
 			output.flush();
 			
-			try {
-				connection.close();
-			}catch(IOException e) {
-				e.printStackTrace();
-			}
 			
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				connection.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -65,20 +71,22 @@ public class TCPHandler implements NetworkAccess{
 		Socket connection = null;
 		try {
 			connection = new Socket ("localhost", databaseMessage.getPort());//message.getPort() = JMeter port
-			ObjectOutputStream output = new
-			ObjectOutputStream(connection.getOutputStream());
-				
+			ObjectOutputStream output = new ObjectOutputStream(connection.getOutputStream());
+			
 			output.writeObject(databaseMessage);
 			output.flush();
 			
-			try {
-				connection.close();
-			}catch(IOException e) {
-				e.printStackTrace();
-			}
 			
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				connection.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -87,20 +95,24 @@ public class TCPHandler implements NetworkAccess{
 		try {
 			Socket nextClient = this.socket.accept();
 			
-			ObjectInputStream input =new ObjectInputStream(nextClient.getInputStream());
+			ObjectInputStream input = new ObjectInputStream(nextClient.getInputStream());
 			
 			Message msg = (Message) input.readObject();
 			
-			try {
-				this.socket.close();
-			}catch(IOException e) {
-				e.printStackTrace();
-			}
-			
 			return msg;
+			
 		}catch(ClassNotFoundException e) {
 			e.printStackTrace();
+		}catch(IOException e) {
+			e.printStackTrace();
+			try {
+				this.socket.close();
+			} catch (IOException e2) {
+				e2.printStackTrace();
+			}
 		}
+		
+		
 		return null;
 	}
 	
@@ -112,17 +124,19 @@ public class TCPHandler implements NetworkAccess{
 			
 			DatabaseMessage msg = (DatabaseMessage) input.readObject();
 			
-			try {
-				this.socket.close();
-			}catch(IOException e) {
-				e.printStackTrace();
-			}
-			
+
 			return msg;
 		}catch(ClassNotFoundException e) {
 			e.printStackTrace();
-			
+		}catch(IOException e) {
+			e.printStackTrace();
+			try {
+				this.socket.close();
+			} catch (IOException e2) {
+				e2.printStackTrace();
+			}
 		}
+		
 		
 		return null;
 	}

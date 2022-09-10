@@ -24,7 +24,12 @@ public class LoadBalancer {
             System.out.println("Load Balancer successfully started on port 9050");
             while(true){
 
-                this.operation();
+            	Message packetReceived = this.socket.receive();
+                
+                System.out.println("Load Balancer (receiving): " + packetReceived.toString());
+                Message packet = this.processPacket(packetReceived);
+                
+                if(packet != null) this.socket.send(packet);
             }
 
         } catch (IOException e) {
@@ -33,18 +38,18 @@ public class LoadBalancer {
     }
 
 
-    public void operation() throws IOException{
-        Message packetReceived = this.socket.receive();
-
-        Message packet = this.processPacket(packetReceived);
-        
-        if(packet != null) this.socket.send(packet);
-    }
 
 
     public Message processPacket(Message message){
-        Message replyMessage = new Message(message);
-        
+        //Message replyMessage = new Message(message);
+        Message replyMessage = new Message();
+        replyMessage.setError(message.getError());
+        replyMessage.setAddress(message.getAddress());
+        replyMessage.setId(message.getId());
+        replyMessage.setName(message.getName());
+        replyMessage.setPrice(message.getPrice());
+        replyMessage.setAccessToken(message.getAccessToken());
+        replyMessage.setAuthor(message.getAuthor());
 
         int mappedPort = -1;
 
@@ -102,6 +107,7 @@ public class LoadBalancer {
 
     public void connect(String connectionProtocol) throws IOException{
         System.out.println("Starting Load Balancer on port 9050...");
+        System.out.println("Network connection: " + connectionProtocol);
         switch (connectionProtocol.toLowerCase()) {
             case "udp":
                 this.socket = new UDPHandler(9050);

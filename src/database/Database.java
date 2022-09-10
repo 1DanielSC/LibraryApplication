@@ -8,6 +8,7 @@ import application.Server;
 import model.Book;
 import network.DatabaseMessage;
 import network.NetworkAccess;
+import network.TCPHandler;
 import network.UDPHandler;
 
 public class Database implements Server{
@@ -54,7 +55,9 @@ public class Database implements Server{
 					this.registerIntoLoadBalancer(serverPort);
 					break;
 
-				case "tcp": break;
+				case "tcp": 
+					this.socket = new TCPHandler(Integer.parseInt(serverPort));
+					break;
 				case "http": break;
 
 				default:
