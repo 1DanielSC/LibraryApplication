@@ -8,6 +8,7 @@ import application.Server;
 import model.User;
 import network.Message;
 import network.NetworkAccess;
+import network.TCPHandler;
 import network.UDPHandler;
 
 public class UserDatabase implements Server{
@@ -18,7 +19,7 @@ public class UserDatabase implements Server{
     public UserDatabase(String databasePort, String connectionType) throws IOException{
         this.database = new ArrayList<>();
         this.connect(databasePort, connectionType);
-
+        System.out.println("User Database server succesfully started on port " + this.socket.getPort() + ".");
         while(true){
             Message packetReceived = this.socket.receive();
 
@@ -38,7 +39,9 @@ public class UserDatabase implements Server{
                     this.registerIntoLoadBalancer(databasePort);
                     break;
 
-                case "tcp":break; //TODO
+                case "tcp":
+                    this.socket = new TCPHandler(Integer.parseInt(databasePort));
+                    break; 
                 case "http": break; //TODO
 
                 default:
@@ -57,6 +60,10 @@ public class UserDatabase implements Server{
 
     public void removeById(Integer id){
         this.database.remove(id);
+    }
+
+    public boolean isPresent(User user){
+        return this.database.contains(user);
     }
 
     public void registerIntoLoadBalancer(String databasePort){
