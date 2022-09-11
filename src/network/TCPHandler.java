@@ -38,11 +38,12 @@ public class TCPHandler implements NetworkAccess{
 	
 	public void send(Message message) throws IOException{ 
 		Socket connection = null;
+		BufferedWriter out = null;
 		try {
-			connection = new Socket ("localhost", message.getPort());
+			connection = new Socket ("localhost", message.getPort());	//FIX - LoadBalancer - JMeter port is closed
+			System.out.println("Handler: sending to port " + message.getPort());
 			message.setPort(this.serverPort);		
-
-			BufferedWriter out = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()));
+			out = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()));
 
 
 			byte[] msg = this.serializeMessage(message);
@@ -57,7 +58,9 @@ public class TCPHandler implements NetworkAccess{
 			
 		}finally{
 			try {
-				connection.close();
+				if(out != null) out.close();
+				System.out.println("Handler send: closing " + connection.getLocalSocketAddress());
+				if(connection != null) connection.close();
 			} catch (IOException e2) {
 				e2.printStackTrace();
 			}
@@ -67,10 +70,11 @@ public class TCPHandler implements NetworkAccess{
 
 	public void send(Message message, Integer port) throws IOException{ 
 		Socket connection = null;
+		BufferedWriter out = null;
 		try {
 			connection = new Socket ("localhost", port);//message.getPort() = JMeter port
 
-			BufferedWriter out = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()));
+			 out = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()));
 
 			byte[] msg = this.serializeMessage(message);
 
@@ -84,7 +88,8 @@ public class TCPHandler implements NetworkAccess{
 			e.printStackTrace();
 		}finally{
 			try {
-				connection.close();
+				if(out != null) out.close();
+				if(connection != null) connection.close();
 			} catch (IOException e2) {
 				e2.printStackTrace();
 			}
@@ -107,11 +112,12 @@ public class TCPHandler implements NetworkAccess{
 
 	public void send(DatabaseMessage databaseMessage) throws IOException{ //send to database
 		Socket connection = null;
+		BufferedWriter out = null;
 		try {
 			connection = new Socket ("localhost", databaseMessage.getPort()); //before: databaseMessage.getPort()
 			
 			
-			BufferedWriter out = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()));
+			out = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()));
 			databaseMessage.setPort(this.serverPort);
 			
 
@@ -127,7 +133,8 @@ public class TCPHandler implements NetworkAccess{
 			e.printStackTrace();
 		} finally{
 			try {
-				connection.close();
+				if(out != null) out.close();
+				if(connection != null) connection.close();
 			} catch (IOException e2) {
 				e2.printStackTrace();
 			}
@@ -147,22 +154,27 @@ public class TCPHandler implements NetworkAccess{
 	public Message receive() throws IOException{ //receive from JMeter
 		try {
 			Socket nextClient = this.socket.accept();
+			nextClient.setSoTimeout(10000);
 			System.out.println("Handler receive:  this.socket.getLocalPort: " + this.socket.getLocalPort());
 			System.out.println("Handler receive: getLocalPort: " + nextClient.getLocalPort());
 			System.out.println("Handler receive: getPort: " + nextClient.getPort());
+			System.out.println("Handler receive: getRemoteSocketAddress: " + nextClient.getRemoteSocketAddress().toString()); 
 			
+			InetSocketAddress add = (InetSocketAddress) nextClient.getRemoteSocketAddress();
+			System.out.println("Handler receive: InetSocketAddress port: " + add.getPort());
 			
+
 			BufferedReader input = new BufferedReader(new InputStreamReader(nextClient.getInputStream()));
 			Message msg = this.deserializeMessage(input.readLine().getBytes());
 
 
-			System.out.println("Handler receive(): pacote recebido: " + msg.toString());	//BuyServer printou 9050
+			System.out.println("Handler receive(): pacote recebido: " + msg.toString());	
 
 			if(msg.getAction().equals("/sell") || msg.getAction().equals("/buy") || msg.getAction().equals("/login"))
-				msg.setPort(nextClient.getPort());// problema aqui, o pacote recebido pelo BuyServer esta com a porta do socket TCP
+				msg.setPort(nextClient.getPort());// obter porta do JMeter - FIX (nao esta sendo possivel)
 				
 
-			System.out.println("Handler receive(): apos setPort(.getPort()): " + msg.toString()); //BuyServer printou 54588
+			System.out.println("Handler receive(): apos setPort(.getPort()): " + msg.toString()); 
 			
 			
 			return msg;

@@ -25,7 +25,7 @@ public class LoadBalancer {
             while(true){
 
             	Message packetReceived = this.socket.receive();
-                
+
                 System.out.println("Load Balancer (receiving): " + packetReceived.toString());
                 Message packet = this.processPacket(packetReceived);
                 
