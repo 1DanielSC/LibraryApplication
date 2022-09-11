@@ -101,7 +101,9 @@ public class LoadBalancer {
 
             default:
             	System.out.println("Load Balancer: Action not recognized");
-                break;
+                replyMessage.setError("Error: Action not recognized");
+                replyMessage.setPort(message.getPort());
+                return replyMessage;
         }
 
         return null;

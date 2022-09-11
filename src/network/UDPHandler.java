@@ -119,7 +119,7 @@ public class UDPHandler implements NetworkAccess {
 		byte[] packetBytes = this.serializeMessage(databaseMessage);
 		
 		DatagramPacket packet = new DatagramPacket(packetBytes, packetBytes.length, databaseMessage.getAddress(), databaseMessage.getPort());
-		System.out.println("Adddrs: " + packet.getAddress());
+
 		this.socket.send(packet);
 	}
 
