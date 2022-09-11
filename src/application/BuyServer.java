@@ -24,7 +24,7 @@ public class BuyServer implements Server{
 
 			messageToLoadBalancer.setAddress(InetAddress.getLocalHost());
 			messageToLoadBalancer.setId(this.socket.getPort());
-			
+
 			System.out.println("Buy Server: minha porta: " + this.socket.getPort());
 			System.out.println("Buy Server: Vou me registrar no Load Balancer");
 
@@ -59,6 +59,9 @@ public class BuyServer implements Server{
 					replyMessage.setError("Error: it was not possible to save the book");
 				else
 					replyMessage.setError("OK");
+
+				
+				System.out.println("BuyServer: sending to LB: "+replyMessage.toString());
 
 				replyMessage.setAction("send back to JMeter");
 				this.socket.send(replyMessage);
@@ -107,6 +110,7 @@ public class BuyServer implements Server{
 		databaseMessage.setAddress(message.getAddress());
 
 		this.socket.send(databaseMessage); //send to database
+
 		DatabaseMessage response = this.socket.receiveDatabaseMessage(); //receive response from database
 
 		return response;

@@ -29,7 +29,10 @@ public class LoadBalancer {
                 System.out.println("Load Balancer (receiving): " + packetReceived.toString());
                 Message packet = this.processPacket(packetReceived);
                 
-                if(packet != null) this.socket.send(packet);
+                if(packet != null) {
+                    System.out.println("Load Balancer (sending): " + packet.toString());
+                    this.socket.send(packet);
+                }
             }
 
         } catch (IOException e) {
@@ -57,7 +60,7 @@ public class LoadBalancer {
             //whether it's a JMeter request (API consumption) or Server request (LB register)
         switch (message.getAction()) {
             case "/buy":
-	            System.out.println("Load Balancer: JMeter port: " + message.getPort());
+	            System.out.println("Load Balancer: Received from JMeter port: " + message.getPort());
 	            this.jmeterPort = message.getPort();
 
 	            mappedPort = this.roundRobinAlgorithm("/buy");
@@ -66,7 +69,7 @@ public class LoadBalancer {
 	            return replyMessage;
             
             case "/sell":
-	            System.out.println("Load Balancer: JMeter port: " + message.getPort());
+	            System.out.println("Load Balancer: Received from JMeter port: " + message.getPort());
 	            this.jmeterPort = message.getPort();
                 
 	            mappedPort = this.roundRobinAlgorithm("/sell");
@@ -75,17 +78,17 @@ public class LoadBalancer {
 	            return replyMessage;
 
             case "/login":
-	            System.out.println("Load Balancer: JMeter port: " + message.getPort());
+	            System.out.println("Load Balancer: Received from JMeter port: " + message.getPort());
 	            this.jmeterPort = message.getPort();
 	            return replyMessage;
 
             case "create buy instance":
-	            System.out.println("Load Balancer: Vou registrar /buy");
+	            System.out.println("Load Balancer: Vou registrar instancia /buy");
 	            this.registerServerInstance("/buy", message.getId()); 
 	            break;
 
             case "create sell instance":
-	            System.out.println("Load Balancer: Vou registrar /sell");
+	            System.out.println("Load Balancer: Vou registrar instancia /sell");
 	            this.registerServerInstance("/sell", message.getId()); 
 	            break;
 

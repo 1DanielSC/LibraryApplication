@@ -30,6 +30,7 @@ public class Database implements Server{
 				DatabaseMessage packetReceived = this.socket.receiveDatabaseMessage();
 
 				System.out.println("Pacote recebido (BD): " + packetReceived.toString());
+				System.out.println("BD: porta do pacote recebido: " + packetReceived.getPort());
 				
 				DatabaseMessage replyMessage = this.operate(packetReceived);
 				replyMessage.setPort(packetReceived.getPort());

@@ -15,11 +15,11 @@ import java.net.*;
 public class TCPHandler implements NetworkAccess{
 	
 	public final ServerSocket socket;
-	
+	public int serverPort;
 	
 	public TCPHandler(Integer port) throws IOException{
 		this.socket = new ServerSocket(port);
-		
+		this.serverPort = port;
 	}
 	
 
@@ -36,10 +36,11 @@ public class TCPHandler implements NetworkAccess{
 		return serializedMessage;
 	}
 	
-	public void send(Message message) throws IOException{ //send back to JMeter
+	public void send(Message message) throws IOException{ 
 		Socket connection = null;
 		try {
-			connection = new Socket ("localhost", message.getPort());//message.getPort() = JMeter port
+			connection = new Socket ("localhost", message.getPort());
+			message.setPort(this.serverPort);		
 
 			BufferedWriter out = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()));
 
@@ -64,7 +65,7 @@ public class TCPHandler implements NetworkAccess{
 	}
 	 
 
-	public void send(Message message, Integer port) throws IOException{ //send back to JMeter
+	public void send(Message message, Integer port) throws IOException{ 
 		Socket connection = null;
 		try {
 			connection = new Socket ("localhost", port);//message.getPort() = JMeter port
@@ -107,9 +108,12 @@ public class TCPHandler implements NetworkAccess{
 	public void send(DatabaseMessage databaseMessage) throws IOException{ //send to database
 		Socket connection = null;
 		try {
-			connection = new Socket ("localhost", databaseMessage.getPort());
+			connection = new Socket ("localhost", databaseMessage.getPort()); //before: databaseMessage.getPort()
+			
 			
 			BufferedWriter out = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()));
+			databaseMessage.setPort(this.serverPort);
+			
 
 			byte[] msg = this.serializeMessage(databaseMessage);
 
@@ -143,15 +147,23 @@ public class TCPHandler implements NetworkAccess{
 	public Message receive() throws IOException{ //receive from JMeter
 		try {
 			Socket nextClient = this.socket.accept();
-			System.out.println("TCP local port: " + nextClient.getLocalPort());
-			System.out.println("TCP port: " + nextClient.getPort());
+			System.out.println("Handler receive:  this.socket.getLocalPort: " + this.socket.getLocalPort());
+			System.out.println("Handler receive: getLocalPort: " + nextClient.getLocalPort());
+			System.out.println("Handler receive: getPort: " + nextClient.getPort());
 			
-
 			
 			BufferedReader input = new BufferedReader(new InputStreamReader(nextClient.getInputStream()));
-
 			Message msg = this.deserializeMessage(input.readLine().getBytes());
-			msg.setPort(nextClient.getPort());
+
+
+			System.out.println("Handler receive(): pacote recebido: " + msg.toString());	//BuyServer printou 9050
+
+			if(msg.getAction().equals("/sell") || msg.getAction().equals("/buy") || msg.getAction().equals("/login"))
+				msg.setPort(nextClient.getPort());// problema aqui, o pacote recebido pelo BuyServer esta com a porta do socket TCP
+				
+
+			System.out.println("Handler receive(): apos setPort(.getPort()): " + msg.toString()); //BuyServer printou 54588
+			
 			
 			return msg;
 						
@@ -184,9 +196,7 @@ public class TCPHandler implements NetworkAccess{
 			
 			BufferedReader input = new BufferedReader(new InputStreamReader(nextClient.getInputStream()));
 			
-			DatabaseMessage msg = this.deserializeDatabaseMessage(input.readLine().getBytes());
-			msg.setPort(nextClient.getPort());
-			System.out.println("TCP receiveDB: " + nextClient.getPort());
+			DatabaseMessage msg = this.deserializeDatabaseMessage(input.readLine().getBytes());			
 			
 			return msg;
 
