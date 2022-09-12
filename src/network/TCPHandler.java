@@ -15,34 +15,66 @@ import java.net.*;
 public class TCPHandler implements NetworkAccess{
 	
 	public final ServerSocket socket;
+
+	public Socket jmeterSocket;
+
 	public int serverPort;
-	
+
+
 	public TCPHandler(Integer port) throws IOException{
 		this.socket = new ServerSocket(port);
 		this.serverPort = port;
 	}
 	
 
-	private byte[] serializeMessage(Message message){
+	public void sendJMeter(Message message){
+		BufferedWriter out = null;
+		try {
+			
+			if(this.jmeterSocket.isClosed()){
+				System.out.println("-----SOCKET FECHADO----");
+			}
 
-		Gson gson = new GsonBuilder()
-		        .setLenient().serializeNulls()
-		        .create();
-		
-		byte[] serializedMessage = new byte[1024];
-		String stringMessage = gson.toJson(message);
-		serializedMessage = stringMessage.getBytes();
+			message.setPort(this.serverPort);
+			out = new BufferedWriter(new OutputStreamWriter(this.jmeterSocket.getOutputStream()));
+			byte[] msg = this.serializeMessage(message);
 
-		return serializedMessage;
+			out.write(new String(msg));
+       		out.flush();
+
+			System.out.println("-----SENT TO JMETER--------");
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch(IOException e) {
+			e.printStackTrace();
+			
+		}finally{
+			try {
+				if(out != null) out.close();
+				if(this.jmeterSocket != null) this.jmeterSocket.close();
+			} catch (IOException e2) {
+				e2.printStackTrace();
+			}
+		}
 	}
 	
+
 	public void send(Message message) throws IOException{ 
+
 		Socket connection = null;
 		BufferedWriter out = null;
 		try {
-			connection = new Socket ("localhost", message.getPort());	//FIX - LoadBalancer - JMeter port is closed
-			System.out.println("Handler: sending to port " + message.getPort());
+
+			if(message.getAction().equals("send back to JMeter") && this.serverPort == 9050){
+				this.sendJMeter(message);
+				return;
+			}
+
+
+			connection = new Socket("localhost", message.getPort());	//FIX - LoadBalancer - JMeter port is closed
+			//System.out.println("Handler: sending to port " + message.getPort());
 			message.setPort(this.serverPort);		
+
 			out = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()));
 
 
@@ -59,7 +91,6 @@ public class TCPHandler implements NetworkAccess{
 		}finally{
 			try {
 				if(out != null) out.close();
-				System.out.println("Handler send: closing " + connection.getLocalSocketAddress());
 				if(connection != null) connection.close();
 			} catch (IOException e2) {
 				e2.printStackTrace();
@@ -72,7 +103,7 @@ public class TCPHandler implements NetworkAccess{
 		Socket connection = null;
 		BufferedWriter out = null;
 		try {
-			connection = new Socket ("localhost", port);//message.getPort() = JMeter port
+			connection = new Socket ("localhost", port);
 
 			 out = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()));
 
@@ -97,18 +128,7 @@ public class TCPHandler implements NetworkAccess{
 	}
 	
 
-	private byte[] serializeMessage(DatabaseMessage databaseMessage){
-
-		Gson gson = new GsonBuilder()
-		        .setLenient().serializeNulls()
-		        .create();
-		
-		byte[] serializedMessage = new byte[1024];
-		String stringMessage = gson.toJson(databaseMessage);
-		serializedMessage = stringMessage.getBytes();
-
-		return serializedMessage;
-	}
+	
 
 	public void send(DatabaseMessage databaseMessage) throws IOException{ //send to database
 		Socket connection = null;
@@ -141,20 +161,17 @@ public class TCPHandler implements NetworkAccess{
 		}
 	}
 
-	private Message deserializeMessage(byte[] binaryMessage){
-		String message = new String(binaryMessage);
+	
 
-		Gson gson = new GsonBuilder()
-        .setLenient().serializeNulls()
-        .create();
 
-		return gson.fromJson(message.trim(), Message.class);
-	}
 
-	public Message receive() throws IOException{ //receive from JMeter
+	public Message receive() throws IOException{
 		try {
-			Socket nextClient = this.socket.accept();
-			nextClient.setSoTimeout(10000);
+			
+			Socket nextClient = this.socket.accept(); // nextClient eh o socket do JMeter
+															//quando o metodo terminar, ele "deixara de existir"
+
+			
 			System.out.println("Handler receive:  this.socket.getLocalPort: " + this.socket.getLocalPort());
 			System.out.println("Handler receive: getLocalPort: " + nextClient.getLocalPort());
 			System.out.println("Handler receive: getPort: " + nextClient.getPort());
@@ -168,12 +185,22 @@ public class TCPHandler implements NetworkAccess{
 			Message msg = this.deserializeMessage(input.readLine().getBytes());
 
 
+
+			//Paliative solution
+			if(msg.getAction().equals("/buy") ||
+				msg.getAction().equals("/sell") ||
+				msg.getAction().equals("/login")){
+				this.jmeterSocket = nextClient;
+			}
+
+
+
 			System.out.println("Handler receive(): pacote recebido: " + msg.toString());	
 
 			if(msg.getAction().equals("/sell") || msg.getAction().equals("/buy") || msg.getAction().equals("/login"))
-				msg.setPort(nextClient.getPort());// obter porta do JMeter - FIX (nao esta sendo possivel)
+				msg.setPort(nextClient.getPort());
 				
-
+			
 			System.out.println("Handler receive(): apos setPort(.getPort()): " + msg.toString()); 
 			
 			
@@ -192,20 +219,12 @@ public class TCPHandler implements NetworkAccess{
 		return null;
 	}
 
-	private DatabaseMessage deserializeDatabaseMessage(byte[] binaryMessage){
-		String message = new String(binaryMessage);
-
-		Gson gson = new GsonBuilder()
-        .setLenient().serializeNulls()
-        .create();
-
-		return gson.fromJson(message.trim(), DatabaseMessage.class);
-	}
+	
 	
 	public DatabaseMessage receiveDatabaseMessage() throws IOException{ //receive from database
 		try {
 			Socket nextClient = this.socket.accept();
-			
+
 			BufferedReader input = new BufferedReader(new InputStreamReader(nextClient.getInputStream()));
 			
 			DatabaseMessage msg = this.deserializeDatabaseMessage(input.readLine().getBytes());			
@@ -225,6 +244,56 @@ public class TCPHandler implements NetworkAccess{
 		return null;
 	}
 
+
+
+
+	private DatabaseMessage deserializeDatabaseMessage(byte[] binaryMessage){
+		String message = new String(binaryMessage);
+
+		Gson gson = new GsonBuilder()
+        .setLenient().serializeNulls()
+        .create();
+
+		return gson.fromJson(message.trim(), DatabaseMessage.class);
+	}
+
+
+	private byte[] serializeMessage(Message message){
+
+		Gson gson = new GsonBuilder()
+		        .setLenient().serializeNulls()
+		        .create();
+		
+		byte[] serializedMessage = new byte[1024];
+		String stringMessage = gson.toJson(message);
+		serializedMessage = stringMessage.getBytes();
+
+		return serializedMessage;
+	}
+
+
+	private byte[] serializeMessage(DatabaseMessage databaseMessage){
+
+		Gson gson = new GsonBuilder()
+		        .setLenient().serializeNulls()
+		        .create();
+		
+		byte[] serializedMessage = new byte[1024];
+		String stringMessage = gson.toJson(databaseMessage);
+		serializedMessage = stringMessage.getBytes();
+
+		return serializedMessage;
+	}
+
+	private Message deserializeMessage(byte[] binaryMessage){
+		String message = new String(binaryMessage);
+
+		Gson gson = new GsonBuilder()
+        .setLenient().serializeNulls()
+        .create();
+
+		return gson.fromJson(message.trim(), Message.class);
+	}
 	
 	public void register() throws IOException{
 		

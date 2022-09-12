@@ -94,6 +94,7 @@ public class LoadBalancer {
 
             case "send back to JMeter":
 	            replyMessage.setPort(this.jmeterPort);
+                replyMessage.setAction(message.getAction());
 	            System.out.println("Load Balancer: Sending to JMeter: " + replyMessage.toString());
 	            System.out.println("Load Balancer: sending to JMeter on port " + replyMessage.getPort());
 	            return replyMessage;
