@@ -49,6 +49,7 @@ public class Database implements Server{
 
 
 	public void connect(String serverPort, String connectionType){
+		System.out.println("Network connection: " + connectionType);
 		try {
 			switch (connectionType.toLowerCase()) {
 				case "udp":

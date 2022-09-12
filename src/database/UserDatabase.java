@@ -23,10 +23,9 @@ public class UserDatabase implements Server{
         while(true){
             Message packetReceived = this.socket.receive();
 
-            //this.processPacket(packetReceived);
+            Message replyMessage = this.processPacket(packetReceived);
 
-
-            this.socket.send(packetReceived);
+            this.socket.send(replyMessage);
         }
     }
 
@@ -65,6 +64,42 @@ public class UserDatabase implements Server{
     public boolean isPresent(User user){
         return this.database.contains(user);
     }
+
+    public User findByName(String username){
+        for (User user : database) {
+            if(user.getUsername().equals(username))
+                return user;
+        }
+        return null;
+    }
+
+    public Message processPacket(Message message){
+        switch (message.getAction().toUpperCase()) {
+            case "CREATE USER":
+                this.database.add(new User(message.getUsername(), message.getPassword()));
+                message.setError("OK");
+                return message;
+            
+            case "LOGIN":
+                User user = this.findByName(message.getUsername());
+                if(user != null){
+                    if(this.isPresent(user))
+                        message.setError("OK");
+                    else
+                        message.setError("Error: user not found");
+                }
+                else{
+                    message.setError("Error: user not registered");
+                }
+                return message;
+
+            default:
+                System.out.println("Error: action not recognized");
+                break;
+        }
+        return null;
+    }
+
 
     public void registerIntoLoadBalancer(String databasePort){
 
