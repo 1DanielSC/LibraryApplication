@@ -17,7 +17,7 @@ public class Authentication implements Server{
 
     public Authentication(String serverPort, String connectionType){
         this.tokens = new HashMap<>();
-
+        
         try{
             this.connect(serverPort, connectionType);
 			System.out.println("Authentication server succesfully started on port " + this.socket.getPort() + ".");
@@ -71,6 +71,7 @@ public class Authentication implements Server{
 
 			messageToLoadBalancer.setAddress(InetAddress.getLocalHost());
 			messageToLoadBalancer.setId(this.socket.getPort());
+
 
 			System.out.println("Auth Server: minha porta: " + this.socket.getPort());
 			System.out.println("Auth Server: Vou me registrar no Load Balancer");
@@ -145,5 +146,9 @@ public class Authentication implements Server{
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static void main(String[] args) {
+        new Authentication(args[0], args[1]);
     }
 }

@@ -79,6 +79,10 @@ public class LoadBalancer {
 
             case "/login":
 	            System.out.println("Load Balancer: Received from JMeter port: " + message.getPort());
+
+                mappedPort = this.roundRobinAlgorithm("/login");
+	            replyMessage.setPort(mappedPort);
+                replyMessage.setAction("login");
 	            this.jmeterPort = message.getPort();
 	            return replyMessage;
 
@@ -90,6 +94,11 @@ public class LoadBalancer {
             case "create sell instance":
 	            System.out.println("Load Balancer: Vou registrar instancia /sell");
 	            this.registerServerInstance("/sell", message.getId()); 
+	            break;
+
+            case "create authentication instance":
+	            System.out.println("Load Balancer: Vou registrar instancia /sell");
+	            this.registerServerInstance("/login", message.getId()); 
 	            break;
 
             case "send back to JMeter":
