@@ -105,7 +105,7 @@ public class Message extends AbstractMessage implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Message [accessToken=" + accessToken + ", action=" + action + ", address=" + address + ", author="
+		return "Message ["+"user="+username + ", password="+password  +", accessToken=" + accessToken + ", action=" + action + ", address=" + address + ", author="
 				+ author + ", error=" + error + ", id=" + id + ", name=" + name + ", port=" + port + ", price=" + price
 				+ "]";
 	}

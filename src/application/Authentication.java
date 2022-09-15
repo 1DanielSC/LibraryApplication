@@ -24,9 +24,16 @@ public class Authentication implements Server{
 
             while(true){
                 Message packetReceived = this.socket.receive();
+                System.out.println("Authentication (receiving): " + packetReceived.toString());
+
 
                 Message replyMessage = this.processPacket(packetReceived);
+                replyMessage.setPort(packetReceived.getPort());
+				replyMessage.setAddress(packetReceived.getAddress());
 
+                System.out.println("Authentication: sending to LB: "+ replyMessage.toString());
+                replyMessage.setPort(9050); 
+                replyMessage.setAction("send back to JMeter");
                 this.socket.send(replyMessage);
             }
 
@@ -108,8 +115,9 @@ public class Authentication implements Server{
                 break;
         }
 
-        replyMessage.setPort(message.getPort());
-        replyMessage.setAddress(message.getAddress());
+        
+        replyMessage.setPort(message.getPort()); 
+        replyMessage.setAddress(message.getAddress()); 
         return replyMessage;
     }
 
@@ -119,8 +127,8 @@ public class Authentication implements Server{
 
     public Message login(Message message){
         try {
-            this.socket.send(message,9001);
-
+            this.socket.send(message,9001); 
+            
             Message response = this.socket.receive();
 
             if(response.getError().equals("OK")){
@@ -137,9 +145,11 @@ public class Authentication implements Server{
 
     public Message createUser(Message message){
         try {
-            message.setAction("CREATE");
-            this.socket.send(message,9001);
 
+            message.setPort(this.socket.getPort()); 
+            System.out.println("Auth: Sending to UserDatabase: " + message.toString());
+            this.socket.send(message,9001); 
+            
             return this.socket.receive();
 
         } catch (IOException e) {

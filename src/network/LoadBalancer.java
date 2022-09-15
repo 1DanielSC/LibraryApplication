@@ -11,6 +11,7 @@ public class LoadBalancer {
 
     public int lastBuyServer;
     public int lastSellServer;
+    public int lastAuthServer;
     public int jmeterPort;
 
     public LoadBalancer(String connectionProtocol){
@@ -18,6 +19,7 @@ public class LoadBalancer {
         this.microServices = new HashMap<>();
         this.lastBuyServer = 0;
         this.lastSellServer = 0;
+        this.lastAuthServer = 0;
 
         try {
             this.connect(connectionProtocol);
@@ -46,6 +48,8 @@ public class LoadBalancer {
     public Message processPacket(Message message){
         //Message replyMessage = new Message(message);
         Message replyMessage = new Message();
+        replyMessage.setUsername(message.getUsername());
+        replyMessage.setPassword(message.getPassword());
         replyMessage.setError(message.getError());
         replyMessage.setAddress(message.getAddress());
         replyMessage.setId(message.getId());
@@ -56,8 +60,7 @@ public class LoadBalancer {
 
         int mappedPort = -1;
 
-        //check action
-            //whether it's a JMeter request (API consumption) or Server request (LB register)
+
         switch (message.getAction()) {
             case "/buy":
 	            System.out.println("Load Balancer: Received from JMeter port: " + message.getPort());
@@ -86,6 +89,16 @@ public class LoadBalancer {
 	            this.jmeterPort = message.getPort();
 	            return replyMessage;
 
+            case "/login/create user":
+	            System.out.println("Load Balancer: Received from JMeter port: " + message.getPort());
+
+                mappedPort = this.roundRobinAlgorithm("/login");
+	            replyMessage.setPort(mappedPort);
+                replyMessage.setAction("create user");
+	            this.jmeterPort = message.getPort();
+	            return replyMessage;
+
+
             case "create buy instance":
 	            System.out.println("Load Balancer: Vou registrar instancia /buy");
 	            this.registerServerInstance("/buy", message.getId()); 
@@ -97,7 +110,7 @@ public class LoadBalancer {
 	            break;
 
             case "create authentication instance":
-	            System.out.println("Load Balancer: Vou registrar instancia /sell");
+	            System.out.println("Load Balancer: Vou registrar instancia - authentication");
 	            this.registerServerInstance("/login", message.getId()); 
 	            break;
 
@@ -172,6 +185,11 @@ public class LoadBalancer {
             this.lastSellServer++;
             this.lastSellServer = this.lastSellServer%size;
             port = instances.get(this.lastSellServer);
+        }
+        else if(route.equals("/login") || route.equals("/login/create user")){
+            this.lastAuthServer++;
+            this.lastAuthServer = this.lastAuthServer%size;
+            port = instances.get(this.lastAuthServer);
         }
 
         System.out.println("Load Balancer: Port selected: " + port);

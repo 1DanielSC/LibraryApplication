@@ -16,16 +16,26 @@ public class UserDatabase implements Server{
 
     public NetworkAccess socket;
 
-    public UserDatabase(String databasePort, String connectionType) throws IOException{
+    public UserDatabase(String databasePort, String connectionType) {
         this.database = new ArrayList<>();
         this.connect(databasePort, connectionType);
-        System.out.println("User Database server succesfully started on port " + this.socket.getPort() + ".");
-        while(true){
-            Message packetReceived = this.socket.receive();
+        
+        try { 
+            System.out.println("User Database server succesfully started on port " + this.socket.getPort() + ".");
+            while(true){
+                Message packetReceived = this.socket.receive();
+                System.out.println("UserDatabase: receiving: " + packetReceived.toString());
 
-            Message replyMessage = this.processPacket(packetReceived);
 
-            this.socket.send(replyMessage);
+                Message replyMessage = this.processPacket(packetReceived);
+                replyMessage.setPort(packetReceived.getPort());
+				replyMessage.setAddress(packetReceived.getAddress());
+    
+                System.out.println("UserDatabase: sending back to Auth: " + replyMessage.toString());
+                this.socket.send(replyMessage);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -55,6 +65,7 @@ public class UserDatabase implements Server{
 
     public void add(User user){
         this.database.add(user);
+        System.out.println(this.database.toString()); 
     }
 
     public void removeById(Integer id){
@@ -74,24 +85,25 @@ public class UserDatabase implements Server{
     }
 
     public Message processPacket(Message message){
-        switch (message.getAction().toUpperCase()) {
-            case "CREATE USER":
-                this.database.add(new User(message.getUsername(), message.getPassword()));
-                message.setError("OK");
-                return message;
+        Message response = new Message();
+        switch (message.getAction()) {
+            case "create user":
+                this.add(new User(message.getUsername(), message.getPassword()));
+                response.setError("OK");
+                return response;
             
-            case "LOGIN":
+            case "login":
                 User user = this.findByName(message.getUsername());
                 if(user != null){
                     if(this.isPresent(user))
-                        message.setError("OK");
+                    response.setError("OK");
                     else
-                        message.setError("Error: user not found");
+                    response.setError("Error: user not found");
                 }
                 else{
-                    message.setError("Error: user not registered");
+                    response.setError("Error: user not registered");
                 }
-                return message;
+                return response;
 
             default:
                 System.out.println("Error: action not recognized");
@@ -103,5 +115,9 @@ public class UserDatabase implements Server{
 
     public void registerIntoLoadBalancer(String databasePort){
 
+    }
+    
+    public static void main(String[] args) {
+    	new UserDatabase(args[0], args[1]);
     }
 }

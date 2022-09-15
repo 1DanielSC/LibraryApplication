@@ -27,6 +27,11 @@ public class User {
     }
 
     @Override
+    public String toString() {
+        return "User [password=" + password + ", username=" + username + "]";
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

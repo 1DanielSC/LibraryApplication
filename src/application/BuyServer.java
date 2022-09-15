@@ -75,6 +75,7 @@ public class BuyServer implements Server{
 	
 	public void connect(String serverPort, String connectionType) throws IOException{
 		System.out.println("Starting BuyServer on port " + serverPort + "...");
+		System.out.println("Network connection: " + connectionType);
 		try{
 
 			switch (connectionType.toLowerCase()) {

@@ -171,39 +171,21 @@ public class TCPHandler implements NetworkAccess{
 			Socket nextClient = this.socket.accept(); // nextClient eh o socket do JMeter
 															//quando o metodo terminar, ele "deixara de existir"
 
-			
-			System.out.println("Handler receive:  this.socket.getLocalPort: " + this.socket.getLocalPort());
-			System.out.println("Handler receive: getLocalPort: " + nextClient.getLocalPort());
-			System.out.println("Handler receive: getPort: " + nextClient.getPort());
-			System.out.println("Handler receive: getRemoteSocketAddress: " + nextClient.getRemoteSocketAddress().toString()); 
-			
-			InetSocketAddress add = (InetSocketAddress) nextClient.getRemoteSocketAddress();
-			System.out.println("Handler receive: InetSocketAddress port: " + add.getPort());
-			
-
 			BufferedReader input = new BufferedReader(new InputStreamReader(nextClient.getInputStream()));
 			Message msg = this.deserializeMessage(input.readLine().getBytes());
-
-
 
 			//Paliative solution
 			if(msg.getAction().equals("/buy") ||
 				msg.getAction().equals("/sell") ||
-				msg.getAction().equals("/login")){
+				msg.getAction().equals("/login") ||
+				msg.getAction().equals("/login/create user")){
 				this.jmeterSocket = nextClient;
 			}
 
+			if(msg.getAction().equals("/sell") || msg.getAction().equals("/buy") 
+			|| msg.getAction().equals("/login") || msg.getAction().equals("/login/create user"))
+				msg.setPort(nextClient.getPort());		
 
-
-			System.out.println("Handler receive(): pacote recebido: " + msg.toString());	
-
-			if(msg.getAction().equals("/sell") || msg.getAction().equals("/buy") || msg.getAction().equals("/login"))
-				msg.setPort(nextClient.getPort());
-				
-			
-			System.out.println("Handler receive(): apos setPort(.getPort()): " + msg.toString()); 
-			
-			
 			return msg;
 						
 		}catch(IOException e) {
@@ -214,7 +196,6 @@ public class TCPHandler implements NetworkAccess{
 				e2.printStackTrace();
 			}
 		}
-		
 		
 		return null;
 	}

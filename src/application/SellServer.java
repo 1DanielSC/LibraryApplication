@@ -55,6 +55,7 @@ public class SellServer implements Server {
 
 	public void connect(String serverPort, String connectionType) {
 		System.out.println("Starting SellServer on port " + serverPort + "...");
+		System.out.println("Network connection: " + connectionType);
 		try{
 
 			switch (connectionType.toLowerCase()) {
