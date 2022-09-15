@@ -24,15 +24,18 @@ public class Authentication implements Server{
 
             while(true){
                 Message packetReceived = this.socket.receive();
+                int port = packetReceived.getPort(); 
                 System.out.println("Authentication (receiving): " + packetReceived.toString());
 
 
-                Message replyMessage = this.processPacket(packetReceived);
+                Message replyMessage = this.processPacket(packetReceived); //TODO investigar mudança de porta
                 replyMessage.setPort(packetReceived.getPort());
 				replyMessage.setAddress(packetReceived.getAddress());
 
                 System.out.println("Authentication: sending to LB: "+ replyMessage.toString());
-                replyMessage.setPort(9050); 
+
+                
+                replyMessage.setPort(port);
                 replyMessage.setAction("send back to JMeter");
                 this.socket.send(replyMessage);
             }
