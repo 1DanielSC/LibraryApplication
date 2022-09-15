@@ -130,6 +130,9 @@ public class Authentication implements Server{
 
     public Message login(Message message){
         try {
+
+            message.setPort(this.socket.getPort()); 
+            System.out.println("Auth: sending to UserDatabase: " + message.toString());
             this.socket.send(message,9001); 
             
             Message response = this.socket.receive();

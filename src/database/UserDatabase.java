@@ -95,13 +95,13 @@ public class UserDatabase implements Server{
             case "login":
                 User user = this.findByName(message.getUsername());
                 if(user != null){
-                    if(this.isPresent(user))
-                    response.setError("OK");
+                    if(user.getPassword().equals(message.getPassword()))
+                        response.setError("OK");
                     else
-                    response.setError("Error: user not found");
+                        response.setError("Error: invalid password");
                 }
                 else{
-                    response.setError("Error: user not registered");
+                    response.setError("Error: user not found");
                 }
                 return response;
 
