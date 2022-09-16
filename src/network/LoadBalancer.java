@@ -66,6 +66,14 @@ public class LoadBalancer {
 	            System.out.println("Load Balancer: Received from JMeter port: " + message.getPort());
 	            this.jmeterPort = message.getPort();
 
+                if(!this.checkAccessToken(message)){
+                    replyMessage.setPort(this.jmeterPort);
+                    replyMessage.setError("Error: invalid token");
+                    replyMessage.setAction("send back to JMeter");
+                    return replyMessage;
+                }
+                System.out.println("LB: token is valid!");
+
 	            mappedPort = this.roundRobinAlgorithm("/buy");
 	            replyMessage.setPort(mappedPort);
 	            replyMessage.setAction("create");
@@ -75,6 +83,14 @@ public class LoadBalancer {
 	            System.out.println("Load Balancer: Received from JMeter port: " + message.getPort());
 	            this.jmeterPort = message.getPort();
                 
+                if(!this.checkAccessToken(message)){
+                    replyMessage.setPort(this.jmeterPort);
+                    replyMessage.setError("Error: invalid token");
+                    replyMessage.setAction("send back to JMeter");
+                    return replyMessage;
+                }
+                System.out.println("LB: token is valid!");
+
 	            mappedPort = this.roundRobinAlgorithm("/sell");
 	            replyMessage.setPort(mappedPort);
 	            replyMessage.setAction("remove");
@@ -196,7 +212,32 @@ public class LoadBalancer {
         return port;
     }
 
-    //check liveness of instance
+    public boolean checkAccessToken(Message message){
+        Message messageToAuth = new Message();
+        messageToAuth.setUsername(message.getUsername());
+        messageToAuth.setAction("check token");
+        messageToAuth.setAccessToken(message.getAccessToken());
+        messageToAuth.setAddress(message.getAddress());
+        
+        try {
+            messageToAuth.setPort(this.socket.getPort());
+            int mappedPort = this.roundRobinAlgorithm("/login");
+
+            this.socket.send(messageToAuth, mappedPort);
+
+            Message replyFromAuth = this.socket.receive();
+
+            if(replyFromAuth.getError().equals("OK"))
+                return true;
+            else 
+                return false;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("LB: it was not possible to communicate with Authentication service");
+        return false;
+    }
 
     public static void main(String[] args) {
 		new LoadBalancer(args[0]);

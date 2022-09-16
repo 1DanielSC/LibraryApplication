@@ -32,11 +32,13 @@ public class Authentication implements Server{
                 replyMessage.setPort(packetReceived.getPort());
 				replyMessage.setAddress(packetReceived.getAddress());
 
-                System.out.println("Authentication: sending to LB: "+ replyMessage.toString());
-
+                
                 
                 replyMessage.setPort(port);
-                replyMessage.setAction("send back to JMeter");
+                if(!packetReceived.getAction().equals("check token"))
+                    replyMessage.setAction("send back to JMeter");
+                
+                System.out.println("Authentication: sending to LB: "+ replyMessage.toString());
                 this.socket.send(replyMessage);
             }
 
@@ -125,7 +127,7 @@ public class Authentication implements Server{
     }
 
     public boolean checkToken(String username, String token){
-        return this.tokens.get(username).equals(token);
+        return this.tokens.get(username).trim().equals(token.trim());
     }
 
     public Message login(Message message){
