@@ -5,10 +5,13 @@ import java.net.InetAddress;
 
 import model.Book;
 import network.DatabaseMessage;
+import network.Heartbeat;
 import network.Message;
 import network.NetworkAccess;
 import network.TCPHandler;
+import network.TCPHeartbeat;
 import network.UDPHandler;
+import network.UDPHeartbeat;
 
 
 public class BuyServer implements Server{
@@ -16,14 +19,17 @@ public class BuyServer implements Server{
 	
 	public NetworkAccess socket;
 	
+	public Heartbeat hb;
+
 	
-	public void registerIntoLoadBalancer(String serverPort){
+	public void registerIntoLoadBalancer(String serverPort, String hbPort){
 		try {
 			Message messageToLoadBalancer = new Message();
 			messageToLoadBalancer.setAction("create buy instance");
 
 			messageToLoadBalancer.setAddress(InetAddress.getLocalHost());
 			messageToLoadBalancer.setId(this.socket.getPort());
+			messageToLoadBalancer.setName(hbPort);
 
 			System.out.println("Buy Server: minha porta: " + this.socket.getPort());
 			System.out.println("Buy Server: Vou me registrar no Load Balancer");
@@ -35,10 +41,10 @@ public class BuyServer implements Server{
 		}
 	}
 	
-	public BuyServer(String serverPort, String connectionType) {
+	public BuyServer(String serverPort, String connectionType, String hbPort) {
 
 		try{
-			this.connect(serverPort, connectionType);
+			this.connect(serverPort, connectionType, hbPort);
 			System.out.println("BuyServer succesfully started on port " + this.socket.getPort() + ".");
 
 			while(true) {
@@ -73,7 +79,7 @@ public class BuyServer implements Server{
 		
 	}
 	
-	public void connect(String serverPort, String connectionType) throws IOException{
+	public void connect(String serverPort, String connectionType, String hbPort) throws IOException{
 		System.out.println("Starting BuyServer on port " + serverPort + "...");
 		System.out.println("Network connection: " + connectionType);
 		try{
@@ -81,12 +87,14 @@ public class BuyServer implements Server{
 			switch (connectionType.toLowerCase()) {
 				case "udp":
 					this.socket = new UDPHandler(Integer.parseInt(serverPort));
-					this.registerIntoLoadBalancer(serverPort);
+					this.hb = new UDPHeartbeat(Integer.parseInt(hbPort));
+					this.registerIntoLoadBalancer(serverPort, hbPort);
 					break;
 
 				case "tcp" : 
 					this.socket = new TCPHandler(Integer.parseInt(serverPort));
-					this.registerIntoLoadBalancer(serverPort);
+					this.hb = new TCPHeartbeat(Integer.parseInt(hbPort));
+					this.registerIntoLoadBalancer(serverPort, hbPort);
 				break;
 				
 				case "http": break;
@@ -120,7 +128,7 @@ public class BuyServer implements Server{
 
 	
 	public static void main(String[] args) {
-		new BuyServer(args[0], args[1]);
+		new BuyServer(args[0], args[1], args[2]); //port - tcp/udp/http - heartbeat port
 	}
 
 }

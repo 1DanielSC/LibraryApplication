@@ -4,14 +4,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import application.Server;
 import model.User;
 import network.Message;
 import network.NetworkAccess;
 import network.TCPHandler;
 import network.UDPHandler;
 
-public class UserDatabase implements Server{
+public class UserDatabase {
     private List<User> database;
 
     public NetworkAccess socket;

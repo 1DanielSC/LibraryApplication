@@ -15,10 +15,10 @@ public class SellServer implements Server {
 
 	public NetworkAccess socket;
 
-	public SellServer(String serverPort, String connectionType) {
+	public SellServer(String serverPort, String connectionType, String hbPort) {
 
 		try {
-			this.connect(serverPort, connectionType);
+			this.connect(serverPort, connectionType, hbPort);
 
 			System.out.println("SellServer succesfully started on port " + this.socket.getPort() + "...");
 
@@ -53,7 +53,7 @@ public class SellServer implements Server {
 		
 	}
 
-	public void connect(String serverPort, String connectionType) {
+	public void connect(String serverPort, String connectionType, String hbPort) {
 		System.out.println("Starting SellServer on port " + serverPort + "...");
 		System.out.println("Network connection: " + connectionType);
 		try{
@@ -62,12 +62,12 @@ public class SellServer implements Server {
 
 				case "udp":
 					this.socket = new UDPHandler(Integer.parseInt(serverPort));
-					this.registerIntoLoadBalancer(serverPort);
+					this.registerIntoLoadBalancer(serverPort, hbPort);
 					break;
 
 				case "tcp": 
 					this.socket = new TCPHandler(Integer.parseInt(serverPort));
-					this.registerIntoLoadBalancer(serverPort);
+					this.registerIntoLoadBalancer(serverPort, hbPort);
 					break; //TODO
 					
 				case "http": break; //TODO
@@ -99,13 +99,14 @@ public class SellServer implements Server {
 		return response;
 	}
 	
-	public void registerIntoLoadBalancer(String serverPort){
+	public void registerIntoLoadBalancer(String serverPort, String hbPort){
 		try {
 			
 			Message messageToLoadBalancer = new Message();
 			messageToLoadBalancer.setAction("create sell instance");
 			messageToLoadBalancer.setAddress(InetAddress. getLocalHost());
 			messageToLoadBalancer.setId(this.socket.getPort());
+			messageToLoadBalancer.setName(hbPort);
 
 			System.out.println("Sell Server: Vou me registrar no Load Balancer");
 			this.socket.send(messageToLoadBalancer, 9050);
@@ -116,7 +117,7 @@ public class SellServer implements Server {
 	}
 	
 	public static void main(String[] args) {
-		new SellServer(args[0], args[1]);
+		new SellServer(args[0], args[1], args[2]);
 	}
 
 }

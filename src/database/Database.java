@@ -4,14 +4,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import application.Server;
 import model.Book;
 import network.DatabaseMessage;
 import network.NetworkAccess;
 import network.TCPHandler;
 import network.UDPHandler;
 
-public class Database implements Server{
+public class Database {
 
 	public List<Book> database;
 
@@ -54,7 +53,6 @@ public class Database implements Server{
 			switch (connectionType.toLowerCase()) {
 				case "udp":
 					this.socket = new UDPHandler(Integer.parseInt(serverPort));
-					this.registerIntoLoadBalancer(serverPort);
 					break;
 
 				case "tcp": 
@@ -72,9 +70,6 @@ public class Database implements Server{
 		}
 	}
 
-	public void registerIntoLoadBalancer(String serverPort){
-
-	}
 	
 	
 	public DatabaseMessage operate(DatabaseMessage message) {

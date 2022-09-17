@@ -4,22 +4,28 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.HashMap;
 
+import network.Heartbeat;
 import network.Message;
 import network.NetworkAccess;
 import network.TCPHandler;
+import network.TCPHeartbeat;
 import network.UDPHandler;
+import network.UDPHeartbeat;
 
 public class Authentication implements Server{
 
     public NetworkAccess socket;
+
+    public Heartbeat hb;
+
     public HashMap<String, String> tokens;
 
 
-    public Authentication(String serverPort, String connectionType){
+    public Authentication(String serverPort, String connectionType, String hbPort){
         this.tokens = new HashMap<>();
         
         try{
-            this.connect(serverPort, connectionType);
+            this.connect(serverPort, connectionType, hbPort);
 			System.out.println("Authentication server succesfully started on port " + this.socket.getPort() + ".");
 
             while(true){
@@ -47,7 +53,7 @@ public class Authentication implements Server{
         }
     }
 
-    public void connect(String serverPort, String connectionProtocol) throws IOException{
+    public void connect(String serverPort, String connectionProtocol, String hbPort) throws IOException{
         System.out.println("Starting Authentication on port " + serverPort + "...");
         System.out.println("Network connection: " + connectionProtocol);
 		try{
@@ -55,12 +61,14 @@ public class Authentication implements Server{
 			switch (connectionProtocol.toLowerCase()) {
 				case "udp":
 					this.socket = new UDPHandler(Integer.parseInt(serverPort));
-					this.registerIntoLoadBalancer(serverPort);
+                    this.hb = new UDPHeartbeat(Integer.parseInt(hbPort));
+					this.registerIntoLoadBalancer(serverPort, hbPort);
 					break;
 
 				case "tcp" : 
 					this.socket = new TCPHandler(Integer.parseInt(serverPort));
-					this.registerIntoLoadBalancer(serverPort);
+                    this.hb = new TCPHeartbeat(Integer.parseInt(hbPort));
+					this.registerIntoLoadBalancer(serverPort, hbPort);
 				break;
 				
 				case "http": break;
@@ -76,14 +84,14 @@ public class Authentication implements Server{
 		}
     }
 
-    public void registerIntoLoadBalancer(String serverPort){
+    public void registerIntoLoadBalancer(String serverPort, String hbPort){
         try {
 			Message messageToLoadBalancer = new Message();
 			messageToLoadBalancer.setAction("create authentication instance");
 
 			messageToLoadBalancer.setAddress(InetAddress.getLocalHost());
 			messageToLoadBalancer.setId(this.socket.getPort());
-
+            messageToLoadBalancer.setName(hbPort);
 
 			System.out.println("Auth Server: minha porta: " + this.socket.getPort());
 			System.out.println("Auth Server: Vou me registrar no Load Balancer");
@@ -167,6 +175,6 @@ public class Authentication implements Server{
     }
 
     public static void main(String[] args) {
-        new Authentication(args[0], args[1]);
+        new Authentication(args[0], args[1], args[2]);
     }
 }

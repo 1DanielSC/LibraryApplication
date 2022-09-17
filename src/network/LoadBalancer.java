@@ -1,13 +1,23 @@
 package network;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 
 public class LoadBalancer {
     public NetworkAccess socket;
     public HashMap<String, ArrayList<Integer>> microServices;
+    
+    
+    public HashMap<String, ArrayList<Tuple<Integer, Integer>>> microServices2;
+
+    public final ScheduledThreadPoolExecutor heartBeatExecutor = new ScheduledThreadPoolExecutor(1);
+
+    public Heartbeat hb;
 
     public int lastBuyServer;
     public int lastSellServer;
@@ -15,8 +25,10 @@ public class LoadBalancer {
     public int jmeterPort;
 
     public LoadBalancer(String connectionProtocol){
-
+        heartBeatExecutor.scheduleWithFixedDelay(this::heartbeat, 2, 5, TimeUnit.SECONDS);
         this.microServices = new HashMap<>();
+        this.microServices2 = new HashMap<>();
+
         this.lastBuyServer = 0;
         this.lastSellServer = 0;
         this.lastAuthServer = 0;
@@ -42,7 +54,43 @@ public class LoadBalancer {
         }
     }
 
+    
+    public void heartbeat(){
+        System.out.println("LB: Entrei no heartbeat...");
 
+        this.hb.setSoTimeout(6000);
+
+        for(String microService : this.microServices2.keySet()){
+            for(Tuple<Integer, Integer> ports : this.microServices2.get(microService)){
+
+                int hbPort = ports.second;
+
+                try {
+                    System.out.println("LB: sending request to " + microService + "; on hbPort="+hbPort);
+                    this.hb.send(hbPort); //Heartbeat socket port from server instance
+
+                    if(this.hb.receive()){
+                        System.out.println(microService + " on port " + ports.first + " is alive!");
+                    }else{
+                        System.out.println(microService + " on port " + ports.first + " is NOT alive!");
+                        this.microServices2.get(microService).remove(ports);
+                    }
+
+                }catch (SocketTimeoutException e){
+                    System.out.println(microService + " on port " + ports.first + " is dead!");
+                    this.microServices2.get(microService).remove(ports);
+                }
+
+            }
+
+            if(this.microServices2.get(microService).size() == 0){
+                this.microServices2.remove(microService);
+            }
+        }
+        System.out.println("LB: Saindo do heartbeat...");
+    }
+
+    
 
 
     public Message processPacket(Message message){
@@ -117,17 +165,17 @@ public class LoadBalancer {
 
             case "create buy instance":
 	            System.out.println("Load Balancer: Vou registrar instancia /buy");
-	            this.registerServerInstance("/buy", message.getId()); 
+	            this.registerServerInstance("/buy", message.getId(), Integer.parseInt(message.getName())); //"name" will hold hbPort
 	            break;
 
             case "create sell instance":
 	            System.out.println("Load Balancer: Vou registrar instancia /sell");
-	            this.registerServerInstance("/sell", message.getId()); 
+	            this.registerServerInstance("/sell", message.getId(), Integer.parseInt(message.getName())); 
 	            break;
 
             case "create authentication instance":
 	            System.out.println("Load Balancer: Vou registrar instancia - authentication");
-	            this.registerServerInstance("/login", message.getId()); 
+	            this.registerServerInstance("/login", message.getId(), Integer.parseInt(message.getName())); 
 	            break;
 
             case "send back to JMeter":
@@ -155,10 +203,12 @@ public class LoadBalancer {
         switch (connectionProtocol.toLowerCase()) {
             case "udp":
                 this.socket = new UDPHandler(9050);
+                this.hb = new UDPLoadBalancerHB(7000);
                 break;
 
             case "tcp":
                 this.socket = new TCPHandler(9050);
+                this.hb = new TCPLoadBalancerHB(7000);
                 break;
 
             case "http": break;
@@ -170,7 +220,30 @@ public class LoadBalancer {
     }
 
 
-    public void registerServerInstance(String route, Integer port){
+    public void registerServerInstance(String route, Integer port, Integer heartbeatPort){
+
+        Tuple<Integer, Integer> instancePorts = new Tuple<Integer,Integer>(port, heartbeatPort);
+
+        if(!this.microServices.containsKey(route)){
+            ArrayList<Tuple<Integer, Integer>> instancesPort = new ArrayList<>();
+            instancesPort.add(instancePorts);
+            this.microServices2.put(route, instancesPort);
+            System.out.println("Route: " + route + " Ports: " + this.microServices2.get(route));
+            return;
+        }
+
+        ArrayList<Tuple<Integer, Integer>> instances2 = this.microServices2.get(route);
+        this.microServices2.remove(route);
+        if(!instances2.contains(instancePorts)){
+            instances2.add(instancePorts);
+            this.microServices2.put(route, instances2);
+        }
+
+
+
+        /* 
+        //old
+
         if(!this.microServices.containsKey(route)){
             ArrayList<Integer> instancesPort = new ArrayList<>();
             instancesPort.add(port);
@@ -184,32 +257,43 @@ public class LoadBalancer {
             instances.add(port);
             this.microServices.put(route, instances);
         }
+        */
     }
 
     public int roundRobinAlgorithm(String route){
-        ArrayList<Integer> instances = this.microServices.get(route);
+        //ArrayList<Integer> instances = this.microServices.get(route);
 
-        int port = -1;
-        int size = instances.size();
+        ArrayList<Tuple<Integer, Integer>> instances2 = this.microServices2.get(route);
+
+        //int port = -1;
+        int port2 = -1;
+
+        //int size = instances.size();
+
+        int size2 = instances2.size();
+
 
         if(route.equals("/buy")){
             this.lastBuyServer++;
-            this.lastBuyServer = this.lastBuyServer%size;
-            port = instances.get(this.lastBuyServer);
+            this.lastBuyServer = this.lastBuyServer%size2;
+            //port = instances.get(this.lastBuyServer);
+            port2 = instances2.get(this.lastBuyServer).first;
         }
         else if(route.equals("/sell")){
             this.lastSellServer++;
-            this.lastSellServer = this.lastSellServer%size;
-            port = instances.get(this.lastSellServer);
+            this.lastSellServer = this.lastSellServer%size2;
+            //port = instances.get(this.lastSellServer);
+            port2 = instances2.get(this.lastSellServer).first;
         }
         else if(route.equals("/login") || route.equals("/login/create user")){
             this.lastAuthServer++;
-            this.lastAuthServer = this.lastAuthServer%size;
-            port = instances.get(this.lastAuthServer);
+            this.lastAuthServer = this.lastAuthServer%size2;
+            //port = instances.get(this.lastAuthServer);
+            port2 = instances2.get(this.lastAuthServer).first;
         }
 
-        System.out.println("Load Balancer: Port selected: " + port);
-        return port;
+        System.out.println("Load Balancer: Port selected: " + port2);
+        return port2;
     }
 
     public boolean checkAccessToken(Message message){
