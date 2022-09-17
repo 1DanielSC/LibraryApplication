@@ -71,11 +71,13 @@ public class TCPLoadBalancerHB implements Heartbeat {
         }
         catch (IOException e) {
             e.printStackTrace();
+            /* 
             try {
 				this.socket.close();
 			} catch (IOException e2) {
 				e2.printStackTrace();
 			}
+            */
         }
 
         return false;

@@ -76,16 +76,18 @@ public class LoadBalancer {
                         this.microServices2.get(microService).remove(ports);
                     }
 
-                }catch (SocketTimeoutException e){
+                }catch (IOException e){
                     System.out.println(microService + " on port " + ports.first + " is dead!");
                     this.microServices2.get(microService).remove(ports);
                 }
 
+                System.out.println("Available bhPorts: " + this.microServices2.get(microService));
+                if(this.microServices2.get(microService).size() == 0){
+                    this.microServices2.remove(microService);
+                    break;
+                }
             }
-
-            if(this.microServices2.get(microService).size() == 0){
-                this.microServices2.remove(microService);
-            }
+            
         }
         System.out.println("LB: Saindo do heartbeat...");
     }
@@ -224,7 +226,7 @@ public class LoadBalancer {
 
         Tuple<Integer, Integer> instancePorts = new Tuple<Integer,Integer>(port, heartbeatPort);
 
-        if(!this.microServices.containsKey(route)){
+        if(!this.microServices2.containsKey(route)){
             ArrayList<Tuple<Integer, Integer>> instancesPort = new ArrayList<>();
             instancesPort.add(instancePorts);
             this.microServices2.put(route, instancesPort);
@@ -232,32 +234,15 @@ public class LoadBalancer {
             return;
         }
 
+        System.out.println("LB: ja tenho uma instancia para a rota: " + route);
         ArrayList<Tuple<Integer, Integer>> instances2 = this.microServices2.get(route);
-        this.microServices2.remove(route);
+
         if(!instances2.contains(instancePorts)){
-            instances2.add(instancePorts);
-            this.microServices2.put(route, instances2);
-        }
+            this.microServices2.get(route).add(instancePorts);
+            System.out.println("LB: Services registered after new " + route +": " + this.microServices2.get(route));
+        }else
+            System.out.println("LB: service " + route + " on port " + port + " already exists");
 
-
-
-        /* 
-        //old
-
-        if(!this.microServices.containsKey(route)){
-            ArrayList<Integer> instancesPort = new ArrayList<>();
-            instancesPort.add(port);
-            this.microServices.put(route, instancesPort);
-            System.out.println("Route: " + route + " Ports: " + this.microServices.get(route));
-            return;
-        }
-        ArrayList<Integer> instances = this.microServices.get(route);
-        this.microServices.remove(route);
-        if(!instances.contains(port)){
-            instances.add(port);
-            this.microServices.put(route, instances);
-        }
-        */
     }
 
     public int roundRobinAlgorithm(String route){
