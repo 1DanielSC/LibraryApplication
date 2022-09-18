@@ -67,7 +67,7 @@ public class UDPHeartbeat implements Heartbeat, Runnable {
 
     public void run(){
         while (true) {
-            System.out.println("UDP: Entrei aqui");
+            
             try {
                 byte[] packet = new byte[1024];
                 DatagramPacket receivedPacket = new DatagramPacket(packet,packet.length);
