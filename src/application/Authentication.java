@@ -93,7 +93,6 @@ public class Authentication implements Server{
 			messageToLoadBalancer.setId(this.socket.getPort());
             messageToLoadBalancer.setName(hbPort);
 
-			System.out.println("Auth Server: minha porta: " + this.socket.getPort());
 			System.out.println("Auth Server: Vou me registrar no Load Balancer");
 
 			this.socket.send(messageToLoadBalancer, 9050);

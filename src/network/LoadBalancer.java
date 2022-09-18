@@ -1,7 +1,6 @@
 package network;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -9,11 +8,9 @@ import java.util.concurrent.TimeUnit;
 
 
 public class LoadBalancer {
-    public NetworkAccess socket;
-    public HashMap<String, ArrayList<Integer>> microServices;
+    public NetworkAccess socket;    
     
-    
-    public HashMap<String, ArrayList<Tuple<Integer, Integer>>> microServices2;
+    public HashMap<String, ArrayList<Tuple<Integer, Integer>>> microServices;
 
     public final ScheduledThreadPoolExecutor heartBeatExecutor = new ScheduledThreadPoolExecutor(1);
 
@@ -26,8 +23,8 @@ public class LoadBalancer {
 
     public LoadBalancer(String connectionProtocol){
         heartBeatExecutor.scheduleWithFixedDelay(this::heartbeat, 2, 5, TimeUnit.SECONDS);
+ 
         this.microServices = new HashMap<>();
-        this.microServices2 = new HashMap<>();
 
         this.lastBuyServer = 0;
         this.lastSellServer = 0;
@@ -60,30 +57,30 @@ public class LoadBalancer {
 
         this.hb.setSoTimeout(6000);
 
-        for(String microService : this.microServices2.keySet()){
-            for(Tuple<Integer, Integer> ports : this.microServices2.get(microService)){
+        for(String microService : this.microServices.keySet()){
+            for(Tuple<Integer, Integer> ports : this.microServices.get(microService)){
 
                 int hbPort = ports.second;
 
                 try {
                     System.out.println("LB: sending request to " + microService + "; on hbPort="+hbPort);
-                    this.hb.send(hbPort); //Heartbeat socket port from server instance
+                    this.hb.send(hbPort); 
 
                     if(this.hb.receive()){
                         System.out.println(microService + " on port " + ports.first + " is alive!");
                     }else{
                         System.out.println(microService + " on port " + ports.first + " is NOT alive!");
-                        this.microServices2.get(microService).remove(ports);
+                        this.microServices.get(microService).remove(ports);
                     }
 
                 }catch (IOException e){
                     System.out.println(microService + " on port " + ports.first + " is dead!");
-                    this.microServices2.get(microService).remove(ports);
+                    this.microServices.get(microService).remove(ports);
                 }
 
-                System.out.println("Available bhPorts: " + this.microServices2.get(microService));
-                if(this.microServices2.get(microService).size() == 0){
-                    this.microServices2.remove(microService);
+                System.out.println("Available bhPorts: " + this.microServices.get(microService));
+                if(this.microServices.get(microService).size() == 0){
+                    this.microServices.remove(microService);
                     break;
                 }
             }
@@ -226,59 +223,49 @@ public class LoadBalancer {
 
         Tuple<Integer, Integer> instancePorts = new Tuple<Integer,Integer>(port, heartbeatPort);
 
-        if(!this.microServices2.containsKey(route)){
+        if(!this.microServices.containsKey(route)){
             ArrayList<Tuple<Integer, Integer>> instancesPort = new ArrayList<>();
             instancesPort.add(instancePorts);
-            this.microServices2.put(route, instancesPort);
-            System.out.println("Route: " + route + " Ports: " + this.microServices2.get(route));
+            this.microServices.put(route, instancesPort);
+            System.out.println("Route: " + route + " Ports: " + this.microServices.get(route));
             return;
         }
 
         System.out.println("LB: ja tenho uma instancia para a rota: " + route);
-        ArrayList<Tuple<Integer, Integer>> instances2 = this.microServices2.get(route);
+        ArrayList<Tuple<Integer, Integer>> instances2 = this.microServices.get(route);
 
         if(!instances2.contains(instancePorts)){
-            this.microServices2.get(route).add(instancePorts);
-            System.out.println("LB: Services registered after new " + route +": " + this.microServices2.get(route));
+            this.microServices.get(route).add(instancePorts);
+            System.out.println("LB: Services registered after new " + route +": " + this.microServices.get(route));
         }else
             System.out.println("LB: service " + route + " on port " + port + " already exists");
 
     }
 
     public int roundRobinAlgorithm(String route){
-        //ArrayList<Integer> instances = this.microServices.get(route);
+        ArrayList<Tuple<Integer, Integer>> instances2 = this.microServices.get(route);
 
-        ArrayList<Tuple<Integer, Integer>> instances2 = this.microServices2.get(route);
-
-        //int port = -1;
-        int port2 = -1;
-
-        //int size = instances.size();
-
-        int size2 = instances2.size();
-
+        int portSelected = -1;
+        int length = instances2.size();
 
         if(route.equals("/buy")){
             this.lastBuyServer++;
-            this.lastBuyServer = this.lastBuyServer%size2;
-            //port = instances.get(this.lastBuyServer);
-            port2 = instances2.get(this.lastBuyServer).first;
+            this.lastBuyServer = this.lastBuyServer%length;
+            portSelected = instances2.get(this.lastBuyServer).first;
         }
         else if(route.equals("/sell")){
             this.lastSellServer++;
-            this.lastSellServer = this.lastSellServer%size2;
-            //port = instances.get(this.lastSellServer);
-            port2 = instances2.get(this.lastSellServer).first;
+            this.lastSellServer = this.lastSellServer%length;
+            portSelected = instances2.get(this.lastSellServer).first;
         }
         else if(route.equals("/login") || route.equals("/login/create user")){
             this.lastAuthServer++;
-            this.lastAuthServer = this.lastAuthServer%size2;
-            //port = instances.get(this.lastAuthServer);
-            port2 = instances2.get(this.lastAuthServer).first;
+            this.lastAuthServer = this.lastAuthServer%length;
+            portSelected = instances2.get(this.lastAuthServer).first;
         }
 
-        System.out.println("Load Balancer: Port selected: " + port2);
-        return port2;
+        System.out.println("Load Balancer: Port selected: " + portSelected);
+        return portSelected;
     }
 
     public boolean checkAccessToken(Message message){
