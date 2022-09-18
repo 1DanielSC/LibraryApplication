@@ -41,8 +41,12 @@ public class UDPLoadBalancerHB implements Heartbeat {
             this.socket.receive(receivedPacket);
             String hbMessage = new String(receivedPacket.getData());
 
-            if(hbMessage.equals("I'm alive!"))
+            System.out.println("UDP loadbalancer: pacote recebido: " + hbMessage);
+
+            if(hbMessage.trim().equals("I'm alive!")){
+                System.out.println("UDP LB: the instance is alive!");
                 return true;
+            }
             else
                 return false;
 
