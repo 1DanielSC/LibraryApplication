@@ -53,7 +53,7 @@ public class LoadBalancer {
 
     
     public void heartbeat(){
-        //System.out.println("LB: Entrei no heartbeat...");
+        System.out.println("HeartBear: checking servers liveness");
 
         this.hb.setSoTimeout(6000);
 
@@ -63,7 +63,7 @@ public class LoadBalancer {
                 int hbPort = ports.second;
 
                 try {
-                    System.out.println("LB: sending request to " + microService + "; on hbPort="+hbPort);
+                    System.out.println("HeartBeat: sending request to " + microService + "; on hbPort="+hbPort);
                     this.hb.send(hbPort); 
 
                     if(this.hb.receive()){
@@ -86,7 +86,6 @@ public class LoadBalancer {
             }
             
         }
-        //System.out.println("LB: Saindo do heartbeat...");
     }
 
     
