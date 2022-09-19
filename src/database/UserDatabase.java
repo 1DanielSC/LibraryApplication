@@ -41,6 +41,7 @@ public class UserDatabase {
 
     public void connect(String databasePort, String connectionType){
         System.out.println("Starting UserDatabase server on port " + databasePort + "...");
+        System.out.println("Network connection: " + connectionType);
         try {
             switch(connectionType.toLowerCase()){
                 case "udp":

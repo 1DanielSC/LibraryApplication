@@ -376,7 +376,7 @@ public class HTTPHandler implements NetworkAccess {
 
 
 	public void send(DatabaseMessage databaseMessage) throws IOException{
-        System.out.println("send - DB: port=" + databaseMessage.getPort());
+        
         if(databaseMessage.getError() == null || databaseMessage.getError().equals(""))
             this.sendDBrequest(databaseMessage);
         else
@@ -389,9 +389,10 @@ public class HTTPHandler implements NetworkAccess {
         Socket client = null;
         DataOutputStream out = null;
         try {
+            System.out.println("sending to DB on port=" + databaseMessage.getPort());
             client = new Socket("localhost", databaseMessage.getPort());
             out = new DataOutputStream(client.getOutputStream());
-            
+            databaseMessage.setPort(this.serverPort);
             String headerLine = "GET resource HTTP/1.0\r\n";
             String httpHeaders = "\r\n";
             String emptyLine="\r\n";
