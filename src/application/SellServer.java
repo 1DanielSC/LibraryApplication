@@ -5,15 +5,21 @@ import java.net.InetAddress;
 
 import model.Book;
 import network.DatabaseMessage;
+import network.HTTPHandler;
+import network.Heartbeat;
 import network.Message;
 import network.NetworkAccess;
 import network.TCPHandler;
+import network.TCPHeartbeat;
 import network.UDPHandler;
+import network.UDPHeartbeat;
 
 
 public class SellServer implements Server {
 
 	public NetworkAccess socket;
+
+	public Heartbeat hb;
 
 	public SellServer(String serverPort, String connectionType, String hbPort) {
 
@@ -62,15 +68,21 @@ public class SellServer implements Server {
 
 				case "udp":
 					this.socket = new UDPHandler(Integer.parseInt(serverPort));
+					this.hb = new UDPHeartbeat(Integer.parseInt(serverPort));
 					this.registerIntoLoadBalancer(serverPort, hbPort);
 					break;
 
 				case "tcp": 
 					this.socket = new TCPHandler(Integer.parseInt(serverPort));
+					this.hb = new TCPHeartbeat(Integer.parseInt(serverPort));
 					this.registerIntoLoadBalancer(serverPort, hbPort);
 					break; //TODO
 					
-				case "http": break; //TODO
+				case "http": 
+					this.socket = new HTTPHandler(Integer.parseInt(serverPort));
+					this.hb = new TCPHeartbeat(Integer.parseInt(hbPort));
+					this.registerIntoLoadBalancer(serverPort, hbPort);
+				break; //TODO
 
 				default:
 					System.out.println("Unknown connection type. Aborting server...");

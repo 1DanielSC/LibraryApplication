@@ -6,6 +6,7 @@ import java.util.List;
 
 import model.Book;
 import network.DatabaseMessage;
+import network.HTTPHandler;
 import network.NetworkAccess;
 import network.TCPHandler;
 import network.UDPHandler;
@@ -58,7 +59,9 @@ public class Database {
 				case "tcp": 
 					this.socket = new TCPHandler(Integer.parseInt(serverPort));
 					break;
-				case "http": break;
+				case "http": 
+					this.socket = new HTTPHandler(Integer.parseInt(serverPort));	
+					break;
 
 				default:
 					System.out.println("Unknown connection type. Aborting server...");

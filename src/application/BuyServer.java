@@ -5,6 +5,7 @@ import java.net.InetAddress;
 
 import model.Book;
 import network.DatabaseMessage;
+import network.HTTPHandler;
 import network.Heartbeat;
 import network.Message;
 import network.NetworkAccess;
@@ -97,7 +98,11 @@ public class BuyServer implements Server{
 					this.registerIntoLoadBalancer(serverPort, hbPort);
 				break;
 				
-				case "http": break;
+				case "http": 
+					this.socket = new HTTPHandler(Integer.parseInt(serverPort));
+					this.hb = new TCPHeartbeat(Integer.parseInt(hbPort));
+					this.registerIntoLoadBalancer(serverPort, hbPort);
+					break;
 				default:
 					System.out.println("Unknown connection type. Aborting server...");
 					System.exit(1);

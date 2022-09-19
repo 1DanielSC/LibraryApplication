@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import model.User;
+import network.HTTPHandler;
 import network.Message;
 import network.NetworkAccess;
 import network.TCPHandler;
@@ -50,7 +51,9 @@ public class UserDatabase {
                 case "tcp":
                     this.socket = new TCPHandler(Integer.parseInt(databasePort));
                     break; 
-                case "http": break; //TODO
+                case "http": 
+                    this.socket = new HTTPHandler(Integer.parseInt(databasePort));
+                    break; //TODO
 
                 default:
                     System.out.println("Unknown connection type. Aborting server...");

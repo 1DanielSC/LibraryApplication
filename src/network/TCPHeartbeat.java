@@ -106,7 +106,7 @@ public class TCPHeartbeat implements Heartbeat, Runnable{
                 BufferedReader input = new BufferedReader(new InputStreamReader(client.getInputStream()));
                 String message = input.readLine();
 
-                System.out.println("TCPHeartbeat: received=" + message + "; from port=" + client.getPort());
+                //System.out.println("TCPHeartbeat: received=" + message + "; from port=" + client.getPort());
 
                 connection = new Socket("localhost", 7000);
                 out = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()));
@@ -114,7 +114,7 @@ public class TCPHeartbeat implements Heartbeat, Runnable{
 
                 out.write(heartbeatMessage);
                 out.flush();
-                System.out.println("TCPHeartbeat: sent hb response to LB...");
+                //System.out.println("TCPHeartbeat: sent hb response to LB...");
             } catch (IOException e) {
                 e.printStackTrace();
             }finally{

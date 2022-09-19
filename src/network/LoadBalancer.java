@@ -53,7 +53,7 @@ public class LoadBalancer {
 
     
     public void heartbeat(){
-        System.out.println("LB: Entrei no heartbeat...");
+        //System.out.println("LB: Entrei no heartbeat...");
 
         this.hb.setSoTimeout(6000);
 
@@ -86,7 +86,7 @@ public class LoadBalancer {
             }
             
         }
-        System.out.println("LB: Saindo do heartbeat...");
+        //System.out.println("LB: Saindo do heartbeat...");
     }
 
     
@@ -210,7 +210,10 @@ public class LoadBalancer {
                 this.hb = new TCPLoadBalancerHB(7000);
                 break;
 
-            case "http": break;
+            case "http": 
+                this.socket = new HTTPHandler(9050);
+                this.hb = new TCPLoadBalancerHB(7000);
+                break;
             default:
                 System.out.println("Unknown connection type. Aborting server...");
                 System.exit(1);

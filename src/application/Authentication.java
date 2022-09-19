@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.HashMap;
 
+import network.HTTPHandler;
 import network.Heartbeat;
 import network.Message;
 import network.NetworkAccess;
@@ -31,10 +32,12 @@ public class Authentication implements Server{
             while(true){
                 Message packetReceived = this.socket.receive();
                 int port = packetReceived.getPort(); 
+                System.out.println("Auth: recebi da port: " + port);
                 System.out.println("Authentication (receiving): " + packetReceived.toString());
 
 
                 Message replyMessage = this.processPacket(packetReceived); //TODO investigar mudança de porta
+                System.out.println("Auth: msg recebida do BD: " + replyMessage.toString());
                 replyMessage.setPort(packetReceived.getPort());
 				replyMessage.setAddress(packetReceived.getAddress());
 
@@ -44,7 +47,9 @@ public class Authentication implements Server{
                 if(!packetReceived.getAction().equals("check token"))
                     replyMessage.setAction("send back to JMeter");
                 
+
                 System.out.println("Authentication: sending to LB: "+ replyMessage.toString());
+                System.out.println("");    
                 this.socket.send(replyMessage);
             }
 
@@ -71,7 +76,11 @@ public class Authentication implements Server{
 					this.registerIntoLoadBalancer(serverPort, hbPort);
 				break;
 				
-				case "http": break;
+				case "http": 
+                    this.socket = new HTTPHandler(Integer.parseInt(serverPort));
+                    this.hb = new TCPHeartbeat(Integer.parseInt(hbPort));
+                    this.registerIntoLoadBalancer(serverPort, hbPort);
+                break;
 				default:
 					System.out.println("Unknown connection type. Aborting server...");
 					System.exit(1);
@@ -83,6 +92,7 @@ public class Authentication implements Server{
 			e.printStackTrace();
 		}
     }
+
 
     public void registerIntoLoadBalancer(String serverPort, String hbPort){
         try {
@@ -160,7 +170,7 @@ public class Authentication implements Server{
 
     public Message createUser(Message message){
         try {
-
+            System.out.println("createUser: " + message.toString());
             message.setPort(this.socket.getPort()); 
             System.out.println("Auth: Sending to UserDatabase: " + message.toString());
             this.socket.send(message,9001); 
