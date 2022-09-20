@@ -72,8 +72,7 @@ public class UDPHeartbeat implements Heartbeat, Runnable {
                 byte[] packet = new byte[1024];
                 DatagramPacket receivedPacket = new DatagramPacket(packet,packet.length);
                 this.socket.receive(receivedPacket);
-                System.out.println("UDP: pacote recebido: " + new String(receivedPacket.getData()));
-                System.out.println("UDP: recebi da porta: " + receivedPacket.getPort());
+                
 
                 String replyHbMessage = "I'm alive!";
 

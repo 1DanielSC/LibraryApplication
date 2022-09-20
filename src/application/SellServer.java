@@ -29,11 +29,9 @@ public class SellServer implements Server {
 			System.out.println("SellServer succesfully started on port " + this.socket.getPort() + "...");
 
 			while(true){
-				//receive packet
 				Message packetMessage = this.socket.receive();
+				System.out.println("Sell Server: packet received: " + packetMessage.toString());
 				
-				System.out.println("Vou enviar um pacote");
-				//process the packet received
 				DatabaseMessage responseFromDatabase = this.sendToDatabase(packetMessage);
 				
 
@@ -68,21 +66,21 @@ public class SellServer implements Server {
 
 				case "udp":
 					this.socket = new UDPHandler(Integer.parseInt(serverPort));
-					this.hb = new UDPHeartbeat(Integer.parseInt(serverPort));
+					this.hb = new UDPHeartbeat(Integer.parseInt(hbPort));
 					this.registerIntoLoadBalancer(serverPort, hbPort);
 					break;
 
 				case "tcp": 
 					this.socket = new TCPHandler(Integer.parseInt(serverPort));
-					this.hb = new TCPHeartbeat(Integer.parseInt(serverPort));
+					this.hb = new TCPHeartbeat(Integer.parseInt(hbPort));
 					this.registerIntoLoadBalancer(serverPort, hbPort);
-					break; //TODO
+					break; 
 					
 				case "http": 
 					this.socket = new HTTPHandler(Integer.parseInt(serverPort));
 					this.hb = new TCPHeartbeat(Integer.parseInt(hbPort));
 					this.registerIntoLoadBalancer(serverPort, hbPort);
-				break; //TODO
+				break; 
 
 				default:
 					System.out.println("Unknown connection type. Aborting server...");
@@ -99,10 +97,10 @@ public class SellServer implements Server {
 
 	public DatabaseMessage sendToDatabase(Message message) throws IOException{
 		System.out.println(message.getName() + message.getAuthor() + message.getPrice());
-		System.out.println("hi");
+		
 		Book bookToSend = new Book(message.getName(), message.getAuthor(), message.getPrice());
 
-		DatabaseMessage databaseMessage = new DatabaseMessage("CREATE", bookToSend, 9000);
+		DatabaseMessage databaseMessage = new DatabaseMessage("DELETE", bookToSend, 9000);
 		databaseMessage.setAddress(message.getAddress());
 
 		this.socket.send(databaseMessage); //send to database

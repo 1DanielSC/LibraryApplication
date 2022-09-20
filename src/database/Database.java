@@ -85,17 +85,20 @@ public class Database {
 				
 				
 			case "DELETE":
-				if(this.delete(message.getBook().getId()))
+				if(this.delete(message.getBook())){
+					System.out.println("Book deleted");
+					System.out.println(this.database.toString());
 					response.setError("OK");
+				}
 				else response.setError("Error: Book not found");
 				return response;
 				
 				
-			case "UPDATE":
-				if(this.update(message.getBook().getId(), new Book(message.getBook().getName(), message.getBook().getAuthor(), message.getBook().getPrice())))
-					response.setError("OK");
-				else response.setError("Error: Book not found");
-				return response;
+			//case "UPDATE":
+				//if(this.update(message.getBook().getId(), new Book(message.getBook().getName(), message.getBook().getAuthor(), message.getBook().getPrice())))
+				//	response.setError("OK");
+				//else response.setError("Error: Book not found");
+				//return response;
 
 			case "SELECTBYID":
 				Book queryResult = this.selectById(message.getBook().getId());
@@ -117,7 +120,7 @@ public class Database {
 		this.database.add(book);
 		System.out.println(this.database.toString());
 	}
-
+/* 
 	public boolean update(Integer id, Book book) {
 		if(this.delete(id)){
 			this.save(book);
@@ -125,8 +128,8 @@ public class Database {
 		}
 		return false;
 	}
-	
-	public boolean delete(Integer id) {
+	*/
+	public boolean delete(Book id) {
 		return this.database.remove(id);
 	}
 

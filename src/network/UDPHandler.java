@@ -11,7 +11,6 @@ public class UDPHandler implements NetworkAccess {
 	public final DatagramSocket socket;
 	
 	public UDPHandler(Integer port) throws IOException {
-		System.out.println("Port: " + port);
 		this.socket = new DatagramSocket(port);
 	}
 	
@@ -84,7 +83,6 @@ public class UDPHandler implements NetworkAccess {
 		
 		System.out.println("Handler: " + message.toString());
 		this.socket.send(packet);
-		System.out.println("Handler: enviei o pacote");
 	}
 	
 
